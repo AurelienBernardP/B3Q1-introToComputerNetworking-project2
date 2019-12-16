@@ -3,10 +3,11 @@ import java.io.*;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.TimeoutException;
 
 class Worker extends Thread {
 
-    private static final int TIMEOUT = 1000 * 70;
+    private static final int TIMEOUT = 1000 * 7;
     private boolean isActive;
     private boolean isPassive;
 
@@ -33,20 +34,17 @@ class Worker extends Thread {
             this.socketControl.setSoTimeout(TIMEOUT);
             this.socketControl.setTcpNoDelay(true);
 
-            // Input and output stream of the socket
+            // Input and output stream of the control socket
             outControl = socketControl.getOutputStream();
             inControl = socketControl.getInputStream();
             readerControl = new BufferedReader(new InputStreamReader(inControl));
             request = new String();
 
             while (true) {
-                // Reading the input stream of the socket
+                // Reading the input stream of the control socket
                 request = readerControl.readLine();
-
-                if (request != null) {
+                if (request != null)
                     processRequest(request);
-                }
-
                 // Socket closed from the client side
                 else
                     Server.threadKilled();
@@ -60,13 +58,10 @@ class Worker extends Thread {
     }
 
     private void processRequest(String request) {
-        if (request == null)
-            return;
-
         String[] words = request.split(" ");
 
         if (words.length <= 0) {
-            //out.write
+            controlResponse("502 Command Not Implemented");
             return;
         }
 
@@ -98,7 +93,7 @@ class Worker extends Thread {
         return;
     }
 
-    void initDataConnection(String ipClient, int portClient, int portData){
+    private boolean initDataConnection(String ipClient, int portClient, int portData){
         try {
             //Creating a socket listening on a port
             socketData = new Socket(ipClient, portClient, InetAddress.getLocalHost(),portData);
@@ -111,8 +106,23 @@ class Worker extends Thread {
             outData = socketData.getOutputStream();
             inData = socketData.getInputStream();
             readerData = new BufferedReader(new InputStreamReader(inData));
+            return true; 
         } catch (Exception e) {
             System.out.println("Error initialisation data connection: "+ e);
+            controlResponse("425 Cannot Open Data Connection");
+            return false;
+        }
+    }
+
+    void closeDataConnection(){
+        try {
+            socketData.close();
+
+            outData = null;
+            inData = null;
+            readerData = null;
+        } catch (Exception e) {
+            System.out.println("Closes data connection: "+ e);
         }
     }
 
@@ -136,13 +146,13 @@ class Worker extends Thread {
         
         //Check length of request
         if(request.length != 2){
-            //out.write(new String());
+            controlResponse("502 Command Not Implemented");
             return;
         }
 
         //Check if connection already init
         if(isActive == true || isPassive == true){
-            //out.write(new String());
+            controlResponse("503 Bad Sequence Of Command");
             return;
         }
 
@@ -150,7 +160,7 @@ class Worker extends Thread {
 
         //Check if IP length is ok
         if(interfaceClient.length != 6){
-            //out.write
+            controlResponse("502 Command Not Implemented");
             return;
         }
 
@@ -159,16 +169,35 @@ class Worker extends Thread {
             try {
                 Double.parseDouble(interfaceClient[i]);
             } catch (NumberFormatException e) {
-                //out.write
+                controlResponse("501 Syntax Error In Parameters");
                 return;
             }
         }
 
         int portClient = transitionClientPort(Integer.parseInt(interfaceClient[4]), Integer.parseInt(interfaceClient[5]));
 
+        String ipClient = interfaceClient[0] +"."+ interfaceClient[1] +"."+ interfaceClient[2] +"."+ interfaceClient[3];
+        if(initDataConnection(ipClient, portClient, 2001)){
+            dataResponse("SYN");
+            boolean isAcked = false;
+            while(!isAcked){
+                try {
+                    String response = readerData.readLine();
+                    if(response.equals("SYN, ACK\r\n")){
+                        dataResponse("ACK");
+                        isAcked = true;
+                        controlResponse("200 PORT command successful\r\n");
+                        isActive = true;
+                    }
+                } catch (Exception e) {
+                    System.out.println("Error reading client from data channel: "+ e);
+                    closeDataConnection();
+                    controlResponse("425 Cannot Open Data Connection");
+                    break;
+                }
+            }
+        }
 
-
-        isActive = true;
         return;
     }
 
