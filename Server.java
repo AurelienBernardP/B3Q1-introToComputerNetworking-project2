@@ -7,9 +7,9 @@ import java.net.Socket;
  */
 public class Server {
 
-   private static final int port = 2038;
+   private static final int port = 2;
    private static int nbThreads = 0;
-   private int maxThreads;
+   private static int maxThreads;
 
    public static void main(String argv[]) throws Exception {
 
@@ -32,7 +32,7 @@ public class Server {
 
                Socket socketClient = server.accept();
                //Create a new thread which delegates the connection
-               Worker w = new Worker(socketClient,this);
+               Worker w = new Worker(socketClient);
                nbThreads++;
             }
             
@@ -42,7 +42,7 @@ public class Server {
       }
    }
 
-   void threadKilled(){
+   static void threadKilled(){
       if(nbThreads > 0){
          nbThreads--;
       }else{
