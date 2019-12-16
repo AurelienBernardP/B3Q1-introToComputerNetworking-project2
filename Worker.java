@@ -97,11 +97,29 @@ class Worker extends Thread {
         return;
     }
 
+    void initDataConnection(int portClient, int portData){
+            //TO DO 
+        //Creating a server socket listening on a port
+         try {
+            ServerSocket routerDataConnection = new ServerSocket(portData);             
+         } catch (Exception e) {
+            System.out.println("Error initialisation data connect: "+ e);
+        }
+    }
+
     void controlResponse(String response){
         try {
             outControl.write(response.getBytes());
         } catch (Exception e) {
-            System.out.println("Reponse error: "+e);
+            System.out.println("Reponse Control connection error: "+e);
+        }
+    }
+
+    void dataResponse(String response){
+        try {
+            outData.write(response.getBytes());
+        } catch (Exception e) {
+            System.out.println("Reponse Data connection error: "+e);
         }
     }
 
