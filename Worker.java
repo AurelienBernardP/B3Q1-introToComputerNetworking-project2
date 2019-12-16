@@ -2,6 +2,7 @@
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import StringUtils;
 
 class Worker extends Thread {
     
@@ -9,6 +10,7 @@ class Worker extends Thread {
     private Socket socketData;
     private static final int TIMEOUT = 1000 * 70;
     private boolean isActive;
+    private boolean isPassive;
     private Server parentServer;
 
     public Worker(Socket s, Server parent) {
@@ -61,6 +63,7 @@ class Worker extends Thread {
         String[] words = request.split(" ");
 
         if (words.length <= 0) {
+            //out.write
             return;
         }
 
@@ -80,7 +83,8 @@ class Worker extends Thread {
                     + dataPort[0] + "." + dataPort[1] + ")\r\n").getBytes());
             break;
 
-        case "yas":
+        case "PORT":
+            requestActive(words);
             break;
 
         case "":
@@ -93,4 +97,45 @@ class Worker extends Thread {
         return;
     }
 
+    void requestActive(String[] request){
+        
+        //Check length of request
+        if(request.length != 2){
+            //out.write(new String());
+            return;
+        }
+
+        //Check if connection already init
+        if(isActive == true || isPassive == true){
+            //out.write(new String());
+            return;
+        }
+
+        String[] interfaceClient = request[1].split(",");
+
+        //Check if IP length is ok
+        if(interfaceClient.length != 6){
+            //out.write
+            return;
+        }
+
+        //Check if IP is all number
+        for (int i = 0; i < interfaceClient.length; i++) {
+            try {
+                Double.parseDouble(interfaceClient[i]);
+            } catch (NumberFormatException e) {
+                //out.write
+                return;
+            }
+        }
+
+        int portClient = transitionClientPort(Integer.parseInt(interfaceClient[4]), Integer.parseInt(interfaceClient[4]));
+
+        isActive = true;
+        return;
+    }
+
+    int transitionClientPort(int x, int y){
+        return x*256+y;
+    }
 }
