@@ -62,40 +62,80 @@ class Worker extends Thread {
     private void processRequest(String request) {
         if (request == null)
             return;
-
+    
         String[] words = request.split(" ");
-
+    
         if (words.length <= 0) {
             //out.write
             return;
         }
-
+    
         switch (words[0]) {
             case "PASV":
-                Integer portSocket = socketControl.getPort();
-                byte[] ipSocket = socketControl.getInetAddress().getAddress();
-                //System.out.print("227 Entering Passive Mode (" + +")");
-                //System.out.print("home address" + socketControl.getInetAddress().toString());
-                Integer[] dataPort = new Integer[2];
-
-                dataPort[0] = socketData.getPort() / 256;
-                dataPort[1] = socketData.getPort() % 256;
-
-                controlResponse("227 Entering Passive Mode (" + socketControl.getInetAddress().toString() + "."+ dataPort[0].toString() + "." + dataPort[1].toString() + ")\r\n");
-                break;
-
+                if (words.length > 1)
+                    // send errors
+                    return;
+                pasvConectionInit();
+                return;
             case "PORT":
                 requestPORT(words);
                 break;
-
-            case "":
+    
+            case "CDUP"://go to parent directory, no arg
+                break;
+            case "CWD"://change working directory, 1 arg directory path
                 break;
 
-            default:
+            case "LIST"://see current directory content, no arg( we dont have to handle the case where there is an arg)
+                break;
+
+            case "PWD"://gives path of current directory, no arg
+                break;
+
+            case "DELETE":// delete file in the current dirrectory, 1 arg, the file name
+                break;
+
+            case "GET":// dowload a file from working directory, 1 arg, the file name
+                break;
+
+            case "PUT":// put a file on the server, 1 arg the file name 
+                break;
+
+            case"QUIT":// no arg, disconnect from server
+            case"BYE":
+            case"EXIT":
+            case"CLOSE":
+            case"DISCONNECT":
+
+                break;
+            case"USER": //input user name, 1 arg, the user name
+                break;
+            case"PASS": //input pasword, 1 arg, the password(i think we have to decript it as we receive it cripted)
+                break;
+            case"RENAME":
+                break; //rename a file in current directory , 2 args , current name of file, new filename.
+                
+            default: // error case
                 return;
             }
-
+    
         return;
+    }
+
+    private void pasvConectionInit(){
+
+        Integer portSocket = socketControl.getPort();
+        byte[] ipSocket = socketControl.getInetAddress().getAddress();
+        //System.out.print("227 Entering Passive Mode (" + +")");
+        //System.out.print("home address" + socketControl.getInetAddress().toString());
+        int[] dataPort = getPassivePortAdrs(socketData.getPort());
+
+        controlResponse("227 Entering Passive Mode (" + socketControl.getInetAddress().toString() + "."+ dataPort[0].toString() + "." + dataPort[1].toString() + ")\r\n");
+        return;
+    }
+
+    private int[] getPassivePortAdrs(int portNb){
+        return new int[]{portNb / 256, portNb % 256};
     }
 
     void initDataConnection(String ipClient, int portClient, int portData){
