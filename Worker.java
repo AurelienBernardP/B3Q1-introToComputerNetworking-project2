@@ -1,10 +1,11 @@
 
 import java.io.*;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
 class Worker extends Thread {
-    
+
     private static final int TIMEOUT = 1000 * 70;
     private boolean isActive;
     private boolean isPassive;
@@ -97,13 +98,21 @@ class Worker extends Thread {
         return;
     }
 
-    void initDataConnection(int portClient, int portData){
-            //TO DO 
-        //Creating a server socket listening on a port
-         try {
-            ServerSocket routerDataConnection = new ServerSocket(portData);             
-         } catch (Exception e) {
-            System.out.println("Error initialisation data connect: "+ e);
+    void initDataConnection(String ipClient, int portClient, int portData){
+        try {
+            //Creating a socket listening on a port
+            socketData = new Socket(ipClient, portClient, InetAddress.getLocalHost(),portData);
+            
+            // Setting a time limit
+            this.socketData.setSoTimeout(TIMEOUT);
+            this.socketData.setTcpNoDelay(true);
+
+            // Input and output stream of the socket
+            outData = socketData.getOutputStream();
+            inData = socketData.getInputStream();
+            readerData = new BufferedReader(new InputStreamReader(inData));
+        } catch (Exception e) {
+            System.out.println("Error initialisation data connection: "+ e);
         }
     }
 
