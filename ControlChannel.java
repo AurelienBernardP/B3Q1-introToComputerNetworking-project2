@@ -9,7 +9,7 @@ class ControlChannel extends Thread {
 
     private static final int TIMEOUT = 1000 * 7;
     private boolean isActive;
-    private boolean isPassive;
+    private boolean dataWorking;
 
     private final Socket socketControl;    
     private OutputStream outControl;
@@ -63,16 +63,26 @@ class ControlChannel extends Thread {
         }
     
         switch (words[0]) {
+
+            case "SYST":
+                break;
+
+            case "FEAT":
+                break;
+
+            case "MDTM":
+                break;
+
             case "PASV":
                 if (words.length > 1)
-                    // send errors
-                    return;
+                    controlResponse(new FTPCode().getMessage(202));
+
                 pasvConectionInit();
                 return;
             case "PORT":
                 requestPORT(words);
                 break;
-    
+            
             case "CDUP"://go to parent directory, no arg
                 break;
             case "CWD"://change working directory, 1 arg directory path

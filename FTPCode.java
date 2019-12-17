@@ -51,7 +51,7 @@ public class FTPCode {
             case 421:
                 return "Service not available, closing control connection. This may be a reply to any command if the service knows it must shut down. ";
             case 425:
-                return "Can't open data connection. ";
+                return "Can't open data connection.";
             case 426:
                 return "Connection closed; transfer aborted.";
             case 430:
