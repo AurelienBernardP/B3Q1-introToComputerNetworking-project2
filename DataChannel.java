@@ -14,7 +14,7 @@ class DataChannel extends Thread {
 
     private ControlChannel controlChannel;
 
-    public DataChannel(ControlChannel controlChannel, Socket s, String ipClient, int portClient, int portData){
+    public DataChannel(ControlChannel controlChannel, String ipClient, int portClient, int portData){
         try {
             this.controlChannel = controlChannel;
             this.socketData = new Socket(ipClient, portClient, InetAddress.getLocalHost(),portData);
@@ -107,6 +107,11 @@ class DataChannel extends Thread {
         return;
     }
 
+    void responseAck(){
+        dataResponse("ACK");
+        return;
+    }
+
 
     private void requestAck(String[] request){
         return;
@@ -134,6 +139,9 @@ class DataChannel extends Thread {
         }*/
 
         dataResponse("ACK");
+        closeDataChannel();
+        controlChannel.dataWorking = false;
+        controlChannel.controlResponse(new FTPCode().getMessage(200));
         return;
     }
 

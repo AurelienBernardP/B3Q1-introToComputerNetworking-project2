@@ -5,11 +5,14 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.TimeoutException;
 
+import javafx.scene.chart.PieChart.Data;
+
 class ControlChannel extends Thread {
 
     private static final int TIMEOUT = 1000 * 7;
     private boolean isActive;
     private boolean isPassive;
+    private boolean dataWorking;
 
     private final Socket socketControl;    
     private OutputStream outControl;
@@ -139,7 +142,7 @@ class ControlChannel extends Thread {
     }
 
     void requestPORT(String[] request){
-        
+
         //Check length of request
         if(request.length != 2){
             controlResponse(new FTPCode().getMessage(502));
@@ -173,26 +176,17 @@ class ControlChannel extends Thread {
         int portClient = transitionClientPort(Integer.parseInt(interfaceClient[4]), Integer.parseInt(interfaceClient[5]));
 
         String ipClient = interfaceClient[0] +"."+ interfaceClient[1] +"."+ interfaceClient[2] +"."+ interfaceClient[3];
-        /*if(initDataConnection(ipClient, portClient, 2001)){
-            dataResponse("SYN");
-            boolean isAcked = false;
-            while(!isAcked){
-                try {
-                    String response = readerData.readLine();
-                    if(response.equals("SYN, ACK\r\n")){
-                        dataResponse("ACK");
-                        isAcked = true;
-                        controlResponse("200 PORT command successful\r\n");
-                        isActive = true;
-                    }
-                } catch (Exception e) {
-                    System.out.println("Error reading client from data channel: "+ e);
-                    closeDataConnection();
-                    controlResponse("425 Cannot Open Data Connection");
-                    break;
-                }
-            }
-        }*/
+
+        if(!dataWorking){
+            dataWorking = true;
+            this.dataChannel = new DataChannel(this, ipClient, portClient, 2001);
+            if(dataChannel != null)
+                dataChannel.responseSyn();
+            else
+                controlResponse(new FTPCode().getMessage(502));
+        } else {
+            //addList
+        }
 
         return;
     }
