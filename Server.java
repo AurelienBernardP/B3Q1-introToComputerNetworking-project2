@@ -32,7 +32,8 @@ public class Server {
 
                Socket socketClient = server.accept();
                //Create a new thread which delegates the connection
-               Worker w = new Worker(socketClient).start();
+               ControlChannel w = new ControlChannel(socketClient);
+               w.start();
                nbThreads++;
             }
             

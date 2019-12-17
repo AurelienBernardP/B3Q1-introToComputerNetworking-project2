@@ -4,8 +4,9 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.TimeoutException;
+import "FTPCode.java";
 
-class Worker extends Thread {
+class ControlChannel extends Thread {
 
     private static final int TIMEOUT = 1000 * 7;
     private boolean isActive;
@@ -21,7 +22,7 @@ class Worker extends Thread {
     private InputStream inData;
     private BufferedReader readerData;
 
-    public Worker(Socket s) {
+    public ControlChannel(Socket s) {
         this.socketControl = s;
     }
 
@@ -51,7 +52,7 @@ class Worker extends Thread {
                 return;
             }
         } catch (Exception any) {
-            System.err.println("Worker died: " + any);
+            System.err.println("Control Channel died: " + any);
             Server.threadKilled();
             return;
         }
@@ -186,30 +187,30 @@ class Worker extends Thread {
         
         //Check length of request
         if(request.length != 2){
-            controlResponse("502 Command Not Implemented");
+            controlResponse(FTPCode().getMessage(502));
             return;
         }
 
         //Check if connection already init
         if(isActive == true || isPassive == true){
-            controlResponse("503 Bad Sequence Of Command");
+            controlResponse(FTPCode().getMessage(503));
             return;
         }
-        
+
         String[] interfaceClient = request[1].split(",");
 
         //Check if IP length is ok
         if(interfaceClient.length != 6){
-            controlResponse("502 Command Not Implemented");
+            controlResponse(FTPCode().getMessage(502));
             return;
         }
-        
+
         //Check if IP is all number
         for (int i = 0; i < interfaceClient.length; i++) {
             try {
                 Double.parseDouble(interfaceClient[i]);
             } catch (NumberFormatException e) {
-                controlResponse("501 Syntax Error In Parameters");
+                controlResponse(FTPCode().getMessage(501));
                 return;
             }
         }
