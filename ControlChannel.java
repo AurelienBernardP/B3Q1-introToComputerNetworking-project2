@@ -87,10 +87,10 @@ class Worker extends Thread {
             case "PWD"://gives path of current directory, no arg
                 break;
 
-            case "DELETE":// delete file in the current dirrectory, 1 arg, the file name
+            case "DELETE":// delete file in the current directory, 1 arg, the file name
                 break;
 
-            case "GET":// dowload a file from working directory, 1 arg, the file name
+            case "GET":// download a file from working directory, 1 arg, the file name
                 break;
 
             case "PUT":// put a file on the server, 1 arg the file name 
@@ -101,11 +101,11 @@ class Worker extends Thread {
             case"EXIT":
             case"CLOSE":
             case"DISCONNECT":
-
-                break;
+                controlResponse("Disconnecting, BYE!");
+                return;
             case"USER": //input user name, 1 arg, the user name
                 break;
-            case"PASS": //input pasword, 1 arg, the password(i think we have to decript it as we receive it cripted)
+            case"PASS": //input password, 1 arg, the password(i think we have to decription it as we receive it cripted)
                 break;
             case"RENAME":
                 break; //rename a file in current directory , 2 args , current name of file, new filename.
@@ -195,7 +195,7 @@ class Worker extends Thread {
             controlResponse("503 Bad Sequence Of Command");
             return;
         }
-
+        
         String[] interfaceClient = request[1].split(",");
 
         //Check if IP length is ok
@@ -203,7 +203,7 @@ class Worker extends Thread {
             controlResponse("502 Command Not Implemented");
             return;
         }
-
+        
         //Check if IP is all number
         for (int i = 0; i < interfaceClient.length; i++) {
             try {

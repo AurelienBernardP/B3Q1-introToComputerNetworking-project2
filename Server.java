@@ -16,7 +16,7 @@ public class Server {
       ServerSocket server;
 
       if(argv[2]!= null){
-         maxThreads = Integer.parseInt(argv[2]);
+         maxThreads = Integer.parseInt(argv[2])/2;
       }else{
          System.err.println("wrong use of arguments");
          return;
@@ -32,7 +32,7 @@ public class Server {
 
                Socket socketClient = server.accept();
                //Create a new thread which delegates the connection
-               Worker w = new Worker(socketClient);
+               Worker w = new Worker(socketClient).start();
                nbThreads++;
             }
             
