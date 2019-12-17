@@ -16,10 +16,7 @@ class ControlChannel extends Thread {
     private InputStream inControl;
     private BufferedReader readerControl;
 
-    private Socket socketData;
-    private OutputStream outData;
-    private InputStream inData;
-    private BufferedReader readerData;
+    private DataChannel dataChannel;
 
     public ControlChannel(Socket s) {
         this.socketControl = s;
@@ -133,52 +130,11 @@ class ControlChannel extends Thread {
         return new int[]{portNb / 256, portNb % 256};
     }
 
-    boolean initDataConnection(String ipClient, int portClient, int portData){
-        try {
-            //Creating a socket listening on a port
-            socketData = new Socket(ipClient, portClient, InetAddress.getLocalHost(),portData);
-            
-            // Setting a time limit
-            this.socketData.setSoTimeout(TIMEOUT);
-            this.socketData.setTcpNoDelay(true);
-
-            // Input and output stream of the socket
-            outData = socketData.getOutputStream();
-            inData = socketData.getInputStream();
-            readerData = new BufferedReader(new InputStreamReader(inData));
-            return true; 
-        } catch (Exception e) {
-            System.out.println("Error initialisation data connection: "+ e);
-            controlResponse(new FTPCode().getMessage(425));
-            return false;
-        }
-    }
-
-    void closeDataConnection(){
-        try {
-            socketData.close();
-
-            outData = null;
-            inData = null;
-            readerData = null;
-        } catch (Exception e) {
-            System.out.println("Closes data connection: "+ e);
-        }
-    }
-
     void controlResponse(String response){
         try {
             outControl.write(response.getBytes());
         } catch (Exception e) {
             System.out.println("Reponse Control connection error: "+e);
-        }
-    }
-
-    void dataResponse(String response){
-        try {
-            outData.write(response.getBytes());
-        } catch (Exception e) {
-            System.out.println("Reponse Data connection error: "+e);
         }
     }
 
@@ -217,7 +173,7 @@ class ControlChannel extends Thread {
         int portClient = transitionClientPort(Integer.parseInt(interfaceClient[4]), Integer.parseInt(interfaceClient[5]));
 
         String ipClient = interfaceClient[0] +"."+ interfaceClient[1] +"."+ interfaceClient[2] +"."+ interfaceClient[3];
-        if(initDataConnection(ipClient, portClient, 2001)){
+        /*if(initDataConnection(ipClient, portClient, 2001)){
             dataResponse("SYN");
             boolean isAcked = false;
             while(!isAcked){
@@ -236,7 +192,7 @@ class ControlChannel extends Thread {
                     break;
                 }
             }
-        }
+        }*/
 
         return;
     }

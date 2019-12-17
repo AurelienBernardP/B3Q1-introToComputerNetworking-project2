@@ -1,21 +1,18 @@
 
 import java.io.*;
 import java.net.InetAddress;
-import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.concurrent.TimeoutException;
 
 
 class DataChannel extends Thread {
-
-    ControlChannel controlChannel;
-
     private static final int TIMEOUT = 1000 * 7;
 
     private Socket socketData;
     private OutputStream outData;
     private InputStream inData;
     private BufferedReader readerData;
+
+    private ControlChannel controlChannel;
 
     public DataChannel(ControlChannel controlChannel, Socket s, String ipClient, int portClient, int portData){
         try {
