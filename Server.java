@@ -42,7 +42,12 @@ public class Server {
          System.err.println("Server died: "+ e);
       }
    }
-
+/*
+   static int getAvailablePort(){
+      
+      return -1;
+   }
+*/
    static void threadKilled(){
       if(nbThreads > 0){
          nbThreads--;

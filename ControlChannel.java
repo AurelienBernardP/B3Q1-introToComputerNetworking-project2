@@ -12,7 +12,7 @@ class ControlChannel extends Thread {
     private static final int TIMEOUT = 1000 * 7;
     private boolean isActive;
     private boolean isPassive;
-    private boolean dataWorking;
+    boolean dataChannelWorking;
 
     private final Socket socketControl;    
     private OutputStream outControl;
@@ -67,10 +67,11 @@ class ControlChannel extends Thread {
     
         switch (words[0]) {
             case "PASV":
-                if (words.length > 1)
-                    // send errors
+                if(words.length > 1){
+                    controlResponse(new FTPCode().getMessage(502));
                     return;
-                pasvConectionInit();
+                }
+                requestPASV();
                 return;
             case "PORT":
                 requestPORT(words);
@@ -96,6 +97,10 @@ class ControlChannel extends Thread {
             case "PUT":// put a file on the server, 1 arg the file name 
                 break;
 
+            case "FEAT":
+                requestFEAT();
+                break;
+
             case"QUIT":// no arg, disconnect from server
             case"BYE":
             case"EXIT":
@@ -117,15 +122,42 @@ class ControlChannel extends Thread {
         return;
     }
 
-    private void pasvConectionInit(){
+    private void requestFEAT(){
+        String extensionsSupported = "211-Extensions supported:\r\n";
+        extensionsSupported += "PASV\r\n";
+        extensionsSupported += "PORT\r\n";
+        extensionsSupported += "CDUP\r\n";
+        extensionsSupported += "LIST\r\n";
+        extensionsSupported += "DELETE\r\n";
+        extensionsSupported += "DELETE\r\n";
+        extensionsSupported += "GET\r\n";
+        extensionsSupported += "PASV\r\n";
+        extensionsSupported += "PUT\r\n";
+        extensionsSupported += "QUIT\r\n";
+        extensionsSupported += "BYE\r\n";
+        extensionsSupported += "EXIT\r\n";
+        extensionsSupported += "CLOSE\r\n";
+        extensionsSupported += "DISCONNECT\r\n";
+        extensionsSupported += "USER\r\n";
+        extensionsSupported += "PASS\r\n";
+        extensionsSupported += "RENAME\r\n";
+        extensionsSupported += "211 END\r\n";
 
-        Integer portSocket = socketControl.getPort();
-        byte[] ipSocket = socketControl.getInetAddress().getAddress();
-        //System.out.print("227 Entering Passive Mode (" + +")");
-        //System.out.print("home address" + socketControl.getInetAddress().toString());
-        int[] dataPort = getPassivePortAdrs(socketData.getPort());
+        controlResponse(extensionsSupported);
+        return;
+    }
 
-        controlResponse(new FTPCode().getMessage(227) + " (" + socketControl.getInetAddress().toString() + "."+ Integer.toString(dataPort[0]) + "." + Integer.toString(dataPort[1]) + ")\r\n");
+    private void requestPASV(){
+
+        if(!dataChannelWorking){
+            Integer portSocket = socketControl.getPort();
+            byte[] ipSocket = socketControl.getInetAddress().getAddress();
+            int[] dataPort = getPassivePortAdrs(Server.getAvailablePort());
+            controlResponse(new FTPCode().getMessage(227) + " (" + socketControl.getInetAddress().toString() + "."+ Integer.toString(dataPort[0]) + "." + Integer.toString(dataPort[1]) + ")\r\n");    
+        }
+        else{
+            //add list
+        }
         return;
     }
 
@@ -177,8 +209,8 @@ class ControlChannel extends Thread {
 
         String ipClient = interfaceClient[0] +"."+ interfaceClient[1] +"."+ interfaceClient[2] +"."+ interfaceClient[3];
 
-        if(!dataWorking){
-            dataWorking = true;
+        if(!dataChannelWorking){
+            dataChannelWorking = true;
             this.dataChannel = new DataChannel(this, ipClient, portClient, 2001);
             if(dataChannel != null)
                 dataChannel.responseSyn();

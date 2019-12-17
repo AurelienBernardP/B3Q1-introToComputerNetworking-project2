@@ -140,7 +140,7 @@ class DataChannel extends Thread {
 
         dataResponse("ACK");
         closeDataChannel();
-        controlChannel.dataWorking = false;
+        controlChannel.dataChannelWorking = false;
         controlChannel.controlResponse(new FTPCode().getMessage(200));
         return;
     }
