@@ -11,7 +11,6 @@ class DataChannel extends Thread {
     ControlChannel controlChannel;
 
     private static final int TIMEOUT = 1000 * 7;
-    private boolean isActive;
 
     private Socket socketData;
     private OutputStream outData;
@@ -50,7 +49,9 @@ class DataChannel extends Thread {
                     processRequest(request);
             }
         } catch (Exception any) {
-            socketData.close();
+            try {
+                socketData.close();                
+            } catch (Exception e){}
             controlChannel.controlResponse(new FTPCode().getMessage(425));
             System.err.println("Data Channel died: " + any);
             return;
@@ -61,7 +62,7 @@ class DataChannel extends Thread {
         String[] words = request.split(" ");
     
         if (words.length <= 0) {
-            controlChannel.controlResponse(FTPCode().getMessage(502));
+            controlChannel.controlResponse(new FTPCode().getMessage(502));
             return;
         }
     
@@ -76,11 +77,11 @@ class DataChannel extends Thread {
                 requestSynAck(request.split(","));
                 break;
             default:
-                controlChannel.controlResponse(FTPCode().getMessage(502));
+                controlChannel.controlResponse(new FTPCode().getMessage(502));
                 return;
             }
 
-        controlChannel.controlResponse(FTPCode().getMessage(502));
+        controlChannel.controlResponse(new FTPCode().getMessage(502));
         return;
     }
 
@@ -124,7 +125,7 @@ class DataChannel extends Thread {
         
         /*//Check length of request
         if(request.length != 2){
-            controlResponse(FTPCode().getMessage(502));
+            controlResponse(new FTPCode().getMessage(502));
             return;
         }
 

@@ -1,7 +1,7 @@
 public class FTPCode {
 
 
-    String getCode(int code){
+    String getMessage(int code){
         
         switch(code ) {
             case 125:

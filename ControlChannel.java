@@ -4,7 +4,6 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.TimeoutException;
-import "FTPCode.java";
 
 class ControlChannel extends Thread {
 
@@ -126,7 +125,7 @@ class ControlChannel extends Thread {
         //System.out.print("home address" + socketControl.getInetAddress().toString());
         int[] dataPort = getPassivePortAdrs(socketData.getPort());
 
-        controlResponse("227 Entering Passive Mode (" + socketControl.getInetAddress().toString() + "."+ dataPort[0].toString() + "." + dataPort[1].toString() + ")\r\n");
+        controlResponse(new FTPCode().getMessage(227) + " (" + socketControl.getInetAddress().toString() + "."+ Integer.toString(dataPort[0]) + "." + Integer.toString(dataPort[1]) + ")\r\n");
         return;
     }
 
@@ -150,7 +149,7 @@ class ControlChannel extends Thread {
             return true; 
         } catch (Exception e) {
             System.out.println("Error initialisation data connection: "+ e);
-            controlResponse("425 Cannot Open Data Connection");
+            controlResponse(new FTPCode().getMessage(425));
             return false;
         }
     }
@@ -187,13 +186,13 @@ class ControlChannel extends Thread {
         
         //Check length of request
         if(request.length != 2){
-            controlResponse(FTPCode().getMessage(502));
+            controlResponse(new FTPCode().getMessage(502));
             return;
         }
 
         //Check if connection already init
         if(isActive == true || isPassive == true){
-            controlResponse(FTPCode().getMessage(503));
+            controlResponse(new FTPCode().getMessage(503));
             return;
         }
 
@@ -201,7 +200,7 @@ class ControlChannel extends Thread {
 
         //Check if IP length is ok
         if(interfaceClient.length != 6){
-            controlResponse(FTPCode().getMessage(502));
+            controlResponse(new FTPCode().getMessage(502));
             return;
         }
 
@@ -210,7 +209,7 @@ class ControlChannel extends Thread {
             try {
                 Double.parseDouble(interfaceClient[i]);
             } catch (NumberFormatException e) {
-                controlResponse(FTPCode().getMessage(501));
+                controlResponse(new FTPCode().getMessage(501));
                 return;
             }
         }
