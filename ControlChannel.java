@@ -20,6 +20,8 @@ class ControlChannel extends Thread {
 
     private DataChannel dataChannel;
 
+    private String currentPath;
+
     public ControlChannel(Socket s) {
         this.socketControl = s;
     }
@@ -67,12 +69,32 @@ class ControlChannel extends Thread {
         switch (words[0]) {
 
             case "SYST":
+                controlResponse("215 " + System.getProperty("os.name").toString() +"\n\r");
                 break;
 
             case "FEAT":
+
                 break;
 
             case "MDTM":
+                if(words.length != 2){
+                    controlResponse("502 Command Not Implemented");
+                    return;
+                }
+                String filePath = currentPath + "/" + words[1];
+                if(File.exists(Path.get(filePath))){
+                    String modifData = getLastModifiedTime(Path.get(filePath));
+                    modifData = modifData.replace("-", "");
+                    modifData = modifData.replace(":", "");
+                    if(modifData.contains(".")){
+                        modifData = modifData.substring(0, modifData.lastIndexOf(".")-1);
+                    }
+                    modifData = modifData.substring(0, 9) + modifData.substring(9+1);
+                    controlResponse(new FTPCode().getMessage(253) +" " +modifData +"\n\r"); 
+                }else{
+                    controlResponse(new FTPCode().getMessage(550));
+                }
+
                 break;
 
             case "PASV":

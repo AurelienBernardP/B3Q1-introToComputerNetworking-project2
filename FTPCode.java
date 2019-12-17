@@ -31,7 +31,7 @@ public class FTPCode {
             case 228:
                 return "Entering Long Passive Mode";
             case 229:
-                return "Entering Extended Passive Mode";
+                return "229 Entering Extended Passive Mode";
             case 230:
                 return "User logged in, proceed.";
             case 231:
@@ -40,6 +40,8 @@ public class FTPCode {
                 return "Logout command noted, will complete when transfer done.";
             case 250:
                 return "Requested file action okay, completed. ";
+            case 253:
+                return "253 last modification data correctly retrieved ";
             case 257:
                 return " created.";
             case 331:
@@ -75,7 +77,7 @@ public class FTPCode {
             case 530:
                 return "Not logged in.";
             case 550:
-                return "Requested action not taken. File unavailable.";
+                return "550 Requested action not taken. File unavailable. \n\r";
             case 551:
                 return"Requested action aborted. Page type unknown.";
             case 552:
