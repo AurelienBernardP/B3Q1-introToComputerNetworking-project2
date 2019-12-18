@@ -155,10 +155,10 @@ class VirtualFileSystem{
         return currentFolder.getList();
     }
 
-    Folder doCWD(Folder currentFolder,String childFolder, Boolean isLoggedIn)throws VirtualFileException{
+    Folder doCWD(Folder currentFolder,String childFolder, Boolean isLoggedIn)throws VirtualFileException , NotAuthorizedException{
         Folder nextFolder = currentFolder.getChildFolder(childFolder);
         if(nextFolder.isPrivate() && !isLoggedIn){
-            throw VirtualFileException();
+            throw NotAuthorizedException();
         }
         
         if(nextFolder != null){
@@ -253,6 +253,18 @@ class VirtualFileException extends Exception{
         super();
     }
     public VirtualFileException(String s)
+    {
+        super(s);
+    }
+}
+
+class NotAuthorizedException extends Exception{
+
+    public NotAuthorizedException()
+    {
+        super();
+    }
+    public NotAuthorizedException(String s)
     {
         super(s);
     }
