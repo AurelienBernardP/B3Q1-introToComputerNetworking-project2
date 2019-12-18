@@ -22,10 +22,11 @@ class ControlChannel extends Thread {
     private DataChannel dataChannel;
 
     private Folder currentFolder;
-
+    private Boolean isLoggedIn;
     public ControlChannel(Socket s) {
         this.socketControl = s;
-        currentFolder = VirtualFileSystem.getInstance().getRoot();  
+        currentFolder = VirtualFileSystem.getInstance().getRoot(); 
+        isLoggedIn = false; 
     }
 
     @Override
@@ -111,6 +112,18 @@ class ControlChannel extends Thread {
                 }
                 break;
             case "CWD"://change working directory, 1 arg directory path
+                if(words.length != 2){
+                    controlResponse(new FTPCode().getMessage(504));
+                    return;
+                }
+                try{
+                    VirtualFileSystem.getInstance().doCWD(currentFolder,words[1],isLoggedIn);
+                    controlResponse(new FTPCode().getMessage(200));
+                }catch(VirtualFileException e){
+                    controlResponse(new FTPCode().getMessage(504));
+                }catch(NotAuthorizedException r){
+                    controlResponse(new FTPCode().getMessage(530));
+                }
                 break;
 
             case "LIST"://see current directory content, no arg( we dont have to handle the case where there is an arg)
