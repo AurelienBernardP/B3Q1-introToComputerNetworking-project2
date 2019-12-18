@@ -3,6 +3,7 @@ import java.io.*;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Queue;
 import java.util.concurrent.TimeoutException;
 
 import javafx.scene.chart.PieChart.Data;
@@ -11,6 +12,7 @@ import Folder.java;
 class ControlChannel extends Thread {
 
     private static final int TIMEOUT = 1000 * 7;
+    private Deque<String> requestInQueue;
     private boolean isActive;
     boolean dataChannelWorking;
 
@@ -25,6 +27,7 @@ class ControlChannel extends Thread {
     private Boolean isLoggedIn;
     public ControlChannel(Socket s) {
         this.socketControl = s;
+        requestInQueue = new Deque();
         currentFolder = VirtualFileSystem.getInstance().getRoot(); 
         isLoggedIn = false; 
     }
@@ -48,11 +51,15 @@ class ControlChannel extends Thread {
                 // Reading the input stream of the control socket
                 request = readerControl.readLine();
                 if (request != null)
-                    processRequest(request);
-                // Socket closed from the client side
-                else
+                    requestInQueue.addLast(request);
+                if(requestInQueue.peek() != null)
+                    processRequest(requestInQueue.removeFirst());
+
+                if(request == null && requestInQueue.peek() == null){
                     Server.threadKilled();
-                return;
+                    return;
+                }
+                
             }
         } catch (Exception any) {
             System.err.println("Control Channel died: " + any);
@@ -166,23 +173,23 @@ class ControlChannel extends Thread {
 
     private void requestFEAT(){
         String extensionsSupported = "211-Extensions supported:\r\n";
-        extensionsSupported += "PASV\r\n";
-        extensionsSupported += "PORT\r\n";
-        extensionsSupported += "CDUP\r\n";
-        extensionsSupported += "LIST\r\n";
-        extensionsSupported += "DELETE\r\n";
-        extensionsSupported += "DELETE\r\n";
-        extensionsSupported += "GET\r\n";
-        extensionsSupported += "PASV\r\n";
-        extensionsSupported += "PUT\r\n";
-        extensionsSupported += "QUIT\r\n";
-        extensionsSupported += "BYE\r\n";
-        extensionsSupported += "EXIT\r\n";
-        extensionsSupported += "CLOSE\r\n";
-        extensionsSupported += "DISCONNECT\r\n";
-        extensionsSupported += "USER\r\n";
-        extensionsSupported += "PASS\r\n";
-        extensionsSupported += "RENAME\r\n";
+        controlResponse(extensionsSupported);
+
+        extensionsSupported =  " PASV\r\n";
+        extensionsSupported += " PORT\r\n";
+        extensionsSupported += " CDUP\r\n";
+        extensionsSupported += " LIST\r\n";
+        extensionsSupported += " DELETE\r\n";
+        extensionsSupported += " GET\r\n";
+        extensionsSupported += " PUT\r\n";
+        extensionsSupported += " QUIT\r\n";
+        extensionsSupported += " BYE\r\n";
+        extensionsSupported += " EXIT\r\n";
+        extensionsSupported += " CLOSE\r\n";
+        extensionsSupported += " DISCONNECT\r\n";
+        extensionsSupported += " USER\r\n";
+        extensionsSupported += " PASS\r\n";
+        extensionsSupported += " RENAME\r\n";
         extensionsSupported += "211 END\r\n";
 
         controlResponse(extensionsSupported);
@@ -192,19 +199,21 @@ class ControlChannel extends Thread {
     private void requestPASV(){
 
         if(!dataChannelWorking){
-            Integer portSocket = socketControl.getPort();
-            byte[] ipSocket = socketControl.getInetAddress().getAddress();
-            int[] dataPort = getPassivePortAdrs(Server.getAvailablePort());
-            controlResponse(new FTPCode().getMessage(227) + " (" + socketControl.getInetAddress().toString() + "."+ Integer.toString(dataPort[0]) + "." + Integer.toString(dataPort[1]) + ")\r\n");    
+            Integer portClient = socketControl.getPort();
+            String ipClient = socketControl.getInetAddress().getAddress().toString();
+
+            dataChannel = new DataChannel(this, ipClient, portClient, 0);
+            int[] dataPort = getPassivePortAdrs(dataChannel.getPort());
+            controlResponse(new FTPCode().getMessage(227) + " (" + socketControl.getLocalAddress().toString() + Integer.toString(dataPort[0]) + "." + Integer.toString(dataPort[1]) + ")\r\n");    
         }
         else{
-            //add list
+            requestInQueue.addFirst("PASV\r\n");
         }
         return;
     }
 
     private int[] getPassivePortAdrs(int portNb){
-        return new int[]{portNb / 256, portNb % 256};
+        return new int[]{(portNb-(portNb%256))/256, portNb % 256};
     }
 
     void controlResponse(String response){
@@ -220,12 +229,6 @@ class ControlChannel extends Thread {
         //Check length of request
         if(request.length != 2){
             controlResponse(new FTPCode().getMessage(502));
-            return;
-        }
-
-        //Check if connection already init
-        if(isActive == true){
-            controlResponse(new FTPCode().getMessage(503));
             return;
         }
 
@@ -247,21 +250,21 @@ class ControlChannel extends Thread {
             }
         }
 
-        int portClient = transitionClientPort(Integer.parseInt(interfaceClient[4]), Integer.parseInt(interfaceClient[5]));
-
-        String ipClient = interfaceClient[0] +"."+ interfaceClient[1] +"."+ interfaceClient[2] +"."+ interfaceClient[3];
-
-        if(!dataChannelWorking){
-            dataChannelWorking = true;
-            this.dataChannel = new DataChannel(this, ipClient, portClient, 2001);
-            if(dataChannel != null)
-                dataChannel.responseSyn();
-            else
-                controlResponse(new FTPCode().getMessage(502));
-        } else {
-            //addList
+        //Check if connection already init
+        if(dataChannelWorking){
+            requestInQueue.addFirst(request[0] + request[1]);
+            return;
         }
 
+        int portClient = transitionClientPort(Integer.parseInt(interfaceClient[4]), Integer.parseInt(interfaceClient[5]));
+        String ipClient = interfaceClient[0] +"."+ interfaceClient[1] +"."+ interfaceClient[2] +"."+ interfaceClient[3];
+
+        dataChannelWorking = true;
+        this.dataChannel = new DataChannel(this, ipClient, portClient, 2001);
+        if(dataChannel != null)
+            dataChannel.responseSyn();
+        else
+            controlResponse(new FTPCode().getMessage(502));
         return;
     }
 

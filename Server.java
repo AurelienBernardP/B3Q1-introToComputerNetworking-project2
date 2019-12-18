@@ -22,6 +22,8 @@ public class Server {
          return;
       }
 
+
+
       try {
          //Creating a server socket listening on a port
          server = new ServerSocket(port);
@@ -42,12 +44,7 @@ public class Server {
          System.err.println("Server died: "+ e);
       }
    }
-/*
-   static int getAvailablePort(){
-      
-      return -1;
-   }
-*/
+
    static void threadKilled(){
       if(nbThreads > 0){
          nbThreads--;
