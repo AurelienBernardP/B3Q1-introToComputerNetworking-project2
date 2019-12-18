@@ -6,6 +6,7 @@ import java.net.Socket;
 import java.util.concurrent.TimeoutException;
 
 import javafx.scene.chart.PieChart.Data;
+import Folder.java;
 
 class ControlChannel extends Thread {
 
@@ -20,10 +21,11 @@ class ControlChannel extends Thread {
 
     private DataChannel dataChannel;
 
-    private String currentPath;
+    private Folder currentFolder;
 
     public ControlChannel(Socket s) {
         this.socketControl = s;
+        currentFolder = VirtualFileSystem.getInstance().getRoot();  
     }
 
     @Override
@@ -80,17 +82,10 @@ class ControlChannel extends Thread {
                     controlResponse("502 Command Not Implemented");
                     return;
                 }
-                String filePath = currentPath + "/" + words[1];
-                if(File.exists(Path.get(filePath))){
-                    String modifData = getLastModifiedTime(Path.get(filePath));
-                    modifData = modifData.replace("-", "");
-                    modifData = modifData.replace(":", "");
-                    if(modifData.contains(".")){
-                        modifData = modifData.substring(0, modifData.lastIndexOf(".")-1);
-                    }
-                    modifData = modifData.substring(0, 9) + modifData.substring(9+1);
-                    controlResponse(new FTPCode().getMessage(253) +" " +modifData +"\n\r"); 
-                }else{
+                try{
+                    Integer lastModified = VirtualFileSystem.getInstance().getFile(currentFolder, words[1]).getLastModified();
+                    controlResponse(new FTPCode().getMessage(253) +" " +lastModified.toString() +"\n\r"); 
+                }catch(VirtualFileException e){
                     controlResponse(new FTPCode().getMessage(550));
                 }
 
