@@ -10,7 +10,6 @@ class Folder{
 
         this.name = name;
         this.isPrivate = isPrivate;
-        this.isRoot = isRoot;
         this.parent = parent;
     }
 
