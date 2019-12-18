@@ -77,6 +77,10 @@ class Folder{
         }
         throw VirtualFileException();
     }
+
+    boolean isPrivate(){
+        return isPrivate;
+    }
    
 }
 
@@ -84,6 +88,7 @@ class Folder{
 class VirtualFileSystem{
     private Folder root;
     private Folder currentFolder;
+    private Boolean isLoggedIn;
     private byte[] myImg = {66,  77,  70,  1,  0,  0,    0,   0,   0,   0,  62,   0,   0,  0,   40,   0,
             0,   0,  34,  0,  0,  0,   33,   0,   0,   0,   1,   0,   1,  0,    0,   0,
             0,   0,   8,  1,  0,  0,    0,   0,   0,   0,   0,   0,   0,  0,    0,   0,
@@ -116,6 +121,7 @@ class VirtualFileSystem{
         Folder privateFolder = root.getChildFolder("private");
         privateFolder.addFile(new File("secret.txt", "UPUPDOWNDOWNLEFTRIGHTLEFTRIGHTBASTART"));
         currentFolder = root;
+        isLoggedIn = false;
     }
 
     String getPWD(){
@@ -132,8 +138,13 @@ class VirtualFileSystem{
         return currentFolder.getList();
     }
 
-    void doCWD(String childFolder)throws VirtualFileException{
+    void doCWD(String childFolder, Boolean isLoggedIn)throws VirtualFileException{
         Folder nextFolder = currentFolder.getChildFolder(childFolder);
+        if(nextFolder.isPrivate() && !isLoggedIn){
+            throw VirtualFileException();
+            return;
+        }
+        
         if(nextFolder != null){
             currentFolder = nextFolder;
         }else{
@@ -173,6 +184,7 @@ class VirtualFileSystem{
     void deleteFile(String name)throws VirtualFileException{
         currentFolder.deleteFile(name);
     }
+
 }
 
 class File{
