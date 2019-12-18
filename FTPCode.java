@@ -9,7 +9,7 @@ public class FTPCode {
             case 150:
                 return "File status okay; about to open data connection.\n\r";
             case 200:
-                return "200 PORT command successful\n\r";
+                return "200 command successful\n\r";
             case 202:
                 return "Command not implemented, superfluous at this site.\n\r";
             case 211:
@@ -69,15 +69,15 @@ public class FTPCode {
             case 500:
                 return "Syntax error in parameters or arguments.\n\r";
             case 502:
-                return "Command not implemented.\n\r";
+                return "502 Command not implemented.\n\r";
             case 503:
-                return "Bad sequence of commands.\n\r";
+                return "503 Bad sequence of commands.\n\r";
             case 504:
-                return "Command not implemented for that parameter.\n\r";
+                return "504 Command not implemented for those parameter.\n\r";
             case 530:
-                return "Not logged in.\n\r";
+                return "530 Not logged in.\n\r";
             case 550:
-                return "550 Requested action not taken. File unavailable. \n\r";
+                return "550 Requested action not taken. \n\r";
             case 551:
                 return"Requested action aborted. Page type unknown.\n\r";
             case 552:

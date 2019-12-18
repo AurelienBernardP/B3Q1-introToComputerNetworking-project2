@@ -1,3 +1,7 @@
+import java.text.DateFormat; 
+import java.text.SimpleDateFormat; 
+import java.util.Date; 
+
 class Folder{
 
     private Boolean isPrivate ;
@@ -10,7 +14,6 @@ class Folder{
 
         this.name = name;
         this.isPrivate = isPrivate;
-        this.isRoot = isRoot;
         this.parent = parent;
     }
 
@@ -24,7 +27,7 @@ class Folder{
             }
         }
 
-        if(nbOccurances > 0 ){
+        if(nbOccurances > 0 ){/// makes error anyway
             newFile.setName(newFile.getName() + "("+ nbOccurances.toString()+")");
         }
 
@@ -54,14 +57,33 @@ class Folder{
     }
 
     String getList(){
-        String list = new String();
+        String list = "";
 
         for (int i = 0; i < subFolders.size(); i++){
-            
+            list += (subFolders.get(i).getName() + " ");
         }
         for (int i = 0; i < files.size(); i++){
-
+            list += (files.get(i).getName() + " ");
         }
+        return list;
+    }
+
+    Folder getParent(){
+        return parent;
+    }
+
+    void deleteFile(String name)throws VirtualFileException{
+        for (int i = 0; i < files.size(); i++){
+            if(name.equals(files.get(i).getName())){
+                files.remove(i);
+                return;
+            }
+        }
+        throw VirtualFileException();
+    }
+
+    boolean isPrivate(){
+        return isPrivate;
     }
    
 }
@@ -69,7 +91,7 @@ class Folder{
 
 class VirtualFileSystem{
     private Folder root;
-    private Folder currentFolder;
+    private Boolean isLoggedIn;
     private byte[] myImg = {66,  77,  70,  1,  0,  0,    0,   0,   0,   0,  62,   0,   0,  0,   40,   0,
             0,   0,  34,  0,  0,  0,   33,   0,   0,   0,   1,   0,   1,  0,    0,   0,
             0,   0,   8,  1,  0,  0,    0,   0,   0,   0,   0,   0,   0,  0,    0,   0,
@@ -93,32 +115,94 @@ class VirtualFileSystem{
         -1,  -1, -64,  0,  0,  0
         
     };
-    VirtualFileSystem(){
-        root = new Folder(root, false, null);
+
+    private static VirtualFileSystem instance = null;
+
+    static VirtualFileSystem getInstance(){
+
+        if(instance != null ){
+            return instance;
+        }else{
+            instance = new VirtualFileSystem();
+            return instance;
+        }
+
+    }
+
+    private VirtualFileSystem(){
+        root = new Folder("/", false, null);
 
         root.addFolder("private",true);
         root.addFile(new File("myText.txt","Irasshaimase"));
-
         root.addFile(new File("myimage.bmp",myImg));
         Folder privateFolder = root.getChildFolder("private");
         privateFolder.addFile(new File("secret.txt", "UPUPDOWNDOWNLEFTRIGHTLEFTRIGHTBASTART"));
+        currentFolder = root;
+        isLoggedIn = false;
+    }
+
+    String getPWD(Folder currentFolder){
+        String path = "";
+        Folder tmp = currentFolder;
+        while(tmp.getParent() != null){
+            path = "/" + tmp.getName + path;
+            tmp = currentFolder.getParent();
+        }
+        return "/" + path;
+    }
+
+    String getLIST(Folder currentFolder){
+        return currentFolder.getList();
+    }
+
+    Folder doCWD(Folder currentFolder,String childFolder, Boolean isLoggedIn)throws VirtualFileException , NotAuthorizedException{
+        Folder nextFolder = currentFolder.getChildFolder(childFolder);
+        if(nextFolder.isPrivate() && !isLoggedIn){
+            throw NotAuthorizedException();
+        }
         
+        if(nextFolder != null){
+            return nextFolder;
+        }else{
+            throw VirtualFileException();
+        }
     }
 
-    String getPWD(){
+    Folder doCDUP(Folder currentFolder)throws VirtualFileException{
+        if(currentFolder.getParent() != null)
+            return currentFolder.getParent();
+        else{
+            throw VirtualFileException();
+        }
 
     }
 
-    String getLs(){
+    File getFile(Folder currentFolder,String name)throws VirtualFileException{
+        File tmp = currentFolder.getFile(name);
+        if (tmp != null)
+            return tmp;
 
+        throw VirtualFileException();
     }
 
-    String doCd(String childFolder){
-        
+    void addFile(Folder currentFolder, File newFile){
+        currentFolder.addFile(newFile);
     }
 
-    File getFile(String name){
-        return currentFolder.getFile(name);
+    void renameFile(Folder currentFolder, Stirng oldName, String newName){
+        File toChange = currentFolder.getFile(oldName);
+        if(toChange != null){
+            toChange.setName(newName);
+        }else{
+            throw VirtualFileException();
+        }
+    }
+    void deleteFile(Folder currentFolder,String name)throws VirtualFileException{
+        currentFolder.deleteFile(name);
+    }
+
+    Folder getRoot(){
+        return root;
     }
 
 }
@@ -127,10 +211,11 @@ class File{
 
     private String name;
     private byte[] content;
-
+    private long lastModified;
     File(String name, byte[] content){
         this.name = name;
         this.content = content;
+        lastModified = System.currentTimeMillis();
     }
 
     File(String name, String content){
@@ -148,6 +233,39 @@ class File{
 
     void setName(String newName){
         name = newName;
+        lastModified = System.currentTimeMillis();
+    }
+    //FORMAT YYYYMMDDhhmmss
+    int getLastModified(){
+        DateFormat simple = new SimpleDateFormat("yyyyMMddHHmmss");
+        Date date = new Date(this.lastModified);
+        return simple.format(Integer.parseInt(result.toString()));
     }
 
+
+
+}
+
+class VirtualFileException extends Exception{
+
+    public VirtualFileException()
+    {
+        super();
+    }
+    public VirtualFileException(String s)
+    {
+        super(s);
+    }
+}
+
+class NotAuthorizedException extends Exception{
+
+    public NotAuthorizedException()
+    {
+        super();
+    }
+    public NotAuthorizedException(String s)
+    {
+        super(s);
+    }
 }
