@@ -7,7 +7,7 @@ import java.net.Socket;
  */
 public class Server {
 
-   private static final int port = 2;
+   private static final int port = 2101;
    private static int nbThreads = 0;
    private static int maxThreads;
 
@@ -15,8 +15,8 @@ public class Server {
 
       ServerSocket server;
 
-      if(argv[2]!= null){
-         maxThreads = Integer.parseInt(argv[2])/2;
+      if(argv[0]!= null){
+         maxThreads = Integer.parseInt(argv[0])/2;
       }else{
          System.err.println("wrong use of arguments");
          return;
@@ -31,10 +31,12 @@ public class Server {
          while(true){
             //Handshaking with the client if thread pool not exceeded
             if(nbThreads < maxThreads){//argv[2]
-
                Socket socketClient = server.accept();
+               System.out.println("Before");
                //Create a new thread which delegates the connection
                ControlChannel w = new ControlChannel(socketClient);
+               System.out.println("After controlchannel");
+
                w.start();
                nbThreads++;
             }

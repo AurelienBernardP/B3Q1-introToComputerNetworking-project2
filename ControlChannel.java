@@ -7,7 +7,7 @@ import java.util.*;
 
 class ControlChannel extends Thread {
 
-    private static final int TIMEOUT = 1000 * 7;
+    private static final int TIMEOUT = 1000 * 20;
     private Deque<String> requestInQueue;
     private boolean isActive;
     boolean dataChannelWorking;
@@ -24,7 +24,7 @@ class ControlChannel extends Thread {
     public ControlChannel(Socket s) {
         this.socketControl = s;
         requestInQueue = new LinkedList<String>();
-        currentFolder = VirtualFileSystem.getInstance().getRoot(); 
+        //currentFolder = VirtualFileSystem.getInstance().getRoot();  IL Y A un null exception ici!
         isLoggedIn = false; 
     }
 
@@ -42,10 +42,12 @@ class ControlChannel extends Thread {
             inControl = socketControl.getInputStream();
             readerControl = new BufferedReader(new InputStreamReader(inControl));
             request = new String();
-
+            controlResponse(new FTPCode().getMessage(200));//Welcome Message
             while (true) {
                 // Reading the input stream of the control socket
                 request = readerControl.readLine();
+                System.out.println("Request = "+ request);
+
                 if (request != null)
                     requestInQueue.addLast(request);
                 if(requestInQueue.peek() != null)
@@ -154,6 +156,7 @@ class ControlChannel extends Thread {
                 controlResponse("Disconnecting, BYE!");
                 return;
             case"USER": //input user name, 1 arg, the user name
+                requestUSER(words);
                 break;
             case"PASS": //input password, 1 arg, the password(i think we have to decription it as we receive it cripted)
                 break;
@@ -164,6 +167,27 @@ class ControlChannel extends Thread {
                 return;
             }
     
+        return;
+    }
+
+    private void requestUSER(String[] request){
+        if(request.length != 2){
+            controlResponse(new FTPCode().getMessage(502));
+            return;
+        }
+
+        if(request[1].equals("anonymous")){
+            controlResponse(new FTPCode().getMessage(230));
+            isLoggedIn = true;
+            return;
+        }
+        if(request[1].equals("SAM")){
+            controlResponse(new FTPCode().getMessage(331));
+            isLoggedIn = true;
+            return;
+        }
+
+        controlResponse(new FTPCode().getMessage(430));
         return;
     }
 
