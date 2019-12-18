@@ -22,7 +22,11 @@ class DataChannel extends Thread {
             controlChannel.controlResponse(new FTPCode().getMessage(425));
             System.out.println("Data channel died: " + e);            
         }
-    } 
+    }
+
+    public int getPort(){
+        return socketData.getLocalPort();
+    }
 
     @Override
     public void run(){
