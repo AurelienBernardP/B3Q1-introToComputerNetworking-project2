@@ -54,14 +54,29 @@ class Folder{
     }
 
     String getList(){
-        String list = new String();
+        String list = "";
 
         for (int i = 0; i < subFolders.size(); i++){
-            
+            list += (subFolders.get(i).getName() + " ");
         }
         for (int i = 0; i < files.size(); i++){
-
+            list += (files.get(i).getName() + " ");
         }
+        return list;
+    }
+
+    Folder getParent(){
+        return parent;
+    }
+
+    void deleteFile(String name)throws VirtualFileException{
+        for (int i = 0; i < files.size(); i++){
+            if(name.equals(files.get(i).getName())){
+                files.remove(i);
+                return;
+            }
+        }
+        throw VirtualFileException();
     }
    
 }
@@ -94,33 +109,71 @@ class VirtualFileSystem{
         
     };
     VirtualFileSystem(){
-        root = new Folder(root, false, null);
+        root = new Folder("/", false, null);
 
         root.addFolder("private",true);
         root.addFile(new File("myText.txt","Irasshaimase"));
-
         root.addFile(new File("myimage.bmp",myImg));
         Folder privateFolder = root.getChildFolder("private");
         privateFolder.addFile(new File("secret.txt", "UPUPDOWNDOWNLEFTRIGHTLEFTRIGHTBASTART"));
-        
+        currentFolder = root;
     }
 
     String getPWD(){
+        String path = "";
+        Folder tmp = currentFolder;
+        while(tmp != null){
+            path = "/" + tmp.getName + path;
+            tmp = currentFolder.getParent();
+        }
+    
+    }
+
+    String getLIST(){
+        return currentFolder.getList();
+    }
+
+    void doCWD(String childFolder)throws VirtualFileException{
+        Folder nextFolder = currentFolder.getChildFolder(childFolder);
+        if(nextFolder != null){
+            currentFolder = nextFolder;
+        }else{
+            throw VirtualFileException();
+        }
+    }
+
+    void doCDUP()throws VirtualFileException{
+        if(currentFolder.getParent() != null)
+            currentFolder = currentFolder.getParent();
+        else{
+            throw VirtualFileException();
+        }
 
     }
 
-    String getLs(){
+    File getFile(String name)throws VirtualFileException{
+        File tmp = currentFolder.getFile(name);
+        if (tmp != null)
+            return tmp;
 
+        throw VirtualFileException();
     }
 
-    String doCd(String childFolder){
-        
+    void addFile(File newFile){
+        currentFolder.addFile(newFile);
     }
 
-    File getFile(String name){
-        return currentFolder.getFile(name);
+    void renameFile(Stirng oldName, String newName){
+        File toChange = currentFolder.getFile(oldName);
+        if(toChange != null){
+            toChange.setName(newName);
+        }else{
+            throw VirtualFileException();
+        }
     }
-
+    void deleteFile(String name)throws VirtualFileException{
+        currentFolder.deleteFile(name);
+    }
 }
 
 class File{
@@ -150,4 +203,16 @@ class File{
         name = newName;
     }
 
+}
+
+class VirtualFileException extends Exception{
+
+    public VirtualFileException()
+    {
+        super();
+    }
+    public VirtualFileException(String s)
+    {
+        super(s);
+    }
 }
