@@ -122,11 +122,14 @@ class ControlChannel extends Thread {
                 }catch(VirtualFileException e){
                     controlResponse(new FTPCode().getMessage(504));
                 }catch(NotAuthorizedException r){
-                    controlResponse(new FTPCode().getMessage(530));
+                    controlResponse(new FTPCode().getMessage(550));
                 }
                 break;
 
             case "LIST"://see current directory content, no arg( we dont have to handle the case where there is an arg)
+                    String list =  VirtualFileSystem.getInstance().getLIST(currentFolder);
+                    controlResponse(new FTPCode().getMessage(200));
+                    controlResponse(list + "\n\r");
                 break;
 
             case "PWD"://gives path of current directory, no arg
