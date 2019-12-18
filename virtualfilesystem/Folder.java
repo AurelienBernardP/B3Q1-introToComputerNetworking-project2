@@ -27,7 +27,7 @@ class Folder{
             }
         }
 
-        if(nbOccurances > 0 ){
+        if(nbOccurances > 0 ){/// makes error anyway
             newFile.setName(newFile.getName() + "("+ nbOccurances.toString()+")");
         }
 
@@ -144,11 +144,11 @@ class VirtualFileSystem{
     String getPWD(Folder currentFolder){
         String path = "";
         Folder tmp = currentFolder;
-        while(tmp != null){
+        while(tmp.getParent() != null){
             path = "/" + tmp.getName + path;
             tmp = currentFolder.getParent();
         }
-    
+        return "/" + path;
     }
 
     String getLIST(Folder currentFolder){
