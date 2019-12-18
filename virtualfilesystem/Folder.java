@@ -1,3 +1,7 @@
+import java.text.DateFormat; 
+import java.text.SimpleDateFormat; 
+import java.util.Date; 
+
 class Folder{
 
     private Boolean isPrivate ;
@@ -191,10 +195,11 @@ class File{
 
     private String name;
     private byte[] content;
-
+    private long lastModified;
     File(String name, byte[] content){
         this.name = name;
         this.content = content;
+        lastModified = System.currentTimeMillis();
     }
 
     File(String name, String content){
@@ -212,6 +217,13 @@ class File{
 
     void setName(String newName){
         name = newName;
+        lastModified = System.currentTimeMillis();
+    }
+    //FORMAT YYYYMMDDhhmmss
+    int getLastModified(){
+        DateFormat simple = new SimpleDateFormat("yyyyMMddHHmmss");
+        Date date = new Date(this.lastModified);
+        return simple.format(Integer.parseInt(result.toString()));
     }
 
 }
