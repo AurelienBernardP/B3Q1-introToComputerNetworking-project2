@@ -91,7 +91,6 @@ class Folder{
 
 class VirtualFileSystem{
     private Folder root;
-    private Folder currentFolder;
     private Boolean isLoggedIn;
     private byte[] myImg = {66,  77,  70,  1,  0,  0,    0,   0,   0,   0,  62,   0,   0,  0,   40,   0,
             0,   0,  34,  0,  0,  0,   33,   0,   0,   0,   1,   0,   1,  0,    0,   0,
@@ -116,7 +115,21 @@ class VirtualFileSystem{
         -1,  -1, -64,  0,  0,  0
         
     };
-    VirtualFileSystem(){
+
+    private static VirtualFileSystem instance = null;
+
+    static VirtualFileSystem getInstance(){
+
+        if(instance != null ){
+            return instance;
+        }else{
+            instance = new VirtualFileSystem();
+            return instance;
+        }
+
+    }
+
+    private VirtualFileSystem(){
         root = new Folder("/", false, null);
 
         root.addFolder("private",true);
@@ -128,7 +141,7 @@ class VirtualFileSystem{
         isLoggedIn = false;
     }
 
-    String getPWD(){
+    String getPWD(Folder currentFolder){
         String path = "";
         Folder tmp = currentFolder;
         while(tmp != null){
@@ -138,34 +151,33 @@ class VirtualFileSystem{
     
     }
 
-    String getLIST(){
+    String getLIST(Folder currentFolder){
         return currentFolder.getList();
     }
 
-    void doCWD(String childFolder, Boolean isLoggedIn)throws VirtualFileException{
+    Folder doCWD(Folder currentFolder,String childFolder, Boolean isLoggedIn)throws VirtualFileException{
         Folder nextFolder = currentFolder.getChildFolder(childFolder);
         if(nextFolder.isPrivate() && !isLoggedIn){
             throw VirtualFileException();
-            return;
         }
         
         if(nextFolder != null){
-            currentFolder = nextFolder;
+            return nextFolder;
         }else{
             throw VirtualFileException();
         }
     }
 
-    void doCDUP()throws VirtualFileException{
+    Folder doCDUP(Folder currentFolder)throws VirtualFileException{
         if(currentFolder.getParent() != null)
-            currentFolder = currentFolder.getParent();
+            return currentFolder.getParent();
         else{
             throw VirtualFileException();
         }
 
     }
 
-    File getFile(String name)throws VirtualFileException{
+    File getFile(Folder currentFolder,String name)throws VirtualFileException{
         File tmp = currentFolder.getFile(name);
         if (tmp != null)
             return tmp;
@@ -173,11 +185,11 @@ class VirtualFileSystem{
         throw VirtualFileException();
     }
 
-    void addFile(File newFile){
+    void addFile(Folder currentFolder, File newFile){
         currentFolder.addFile(newFile);
     }
 
-    void renameFile(Stirng oldName, String newName){
+    void renameFile(Folder currentFolder, Stirng oldName, String newName){
         File toChange = currentFolder.getFile(oldName);
         if(toChange != null){
             toChange.setName(newName);
@@ -185,8 +197,12 @@ class VirtualFileSystem{
             throw VirtualFileException();
         }
     }
-    void deleteFile(String name)throws VirtualFileException{
+    void deleteFile(Folder currentFolder,String name)throws VirtualFileException{
         currentFolder.deleteFile(name);
+    }
+
+    Folder getRoot(){
+        return root;
     }
 
 }
@@ -225,6 +241,8 @@ class File{
         Date date = new Date(this.lastModified);
         return simple.format(Integer.parseInt(result.toString()));
     }
+
+
 
 }
 
