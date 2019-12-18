@@ -9,7 +9,7 @@ public class FTPCode {
             case 150:
                 return "File status okay; about to open data connection.\n\r";
             case 200:
-                return "200 PORT command successful\n\r";
+                return "200 command successful\n\r";
             case 202:
                 return "Command not implemented, superfluous at this site.\n\r";
             case 211:
