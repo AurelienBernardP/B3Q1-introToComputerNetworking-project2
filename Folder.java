@@ -1,12 +1,12 @@
 import java.text.DateFormat; 
 import java.text.SimpleDateFormat; 
 import java.util.Date; 
-
+import java.util.*;
 class Folder{
 
     private Boolean isPrivate ;
-    private List<Folder> subFolders;
-    private List<File> files;
+    private ArrayList<Folder> subFolders;
+    private ArrayList<File> files;
     private String name;
     private Folder parent;
 
@@ -34,8 +34,12 @@ class Folder{
         files.add(newFile);
     }
 
+    String getName(){
+        return name;
+    }
+
     void addFolder(String name, Boolean isPrivate){
-        subFolder.add(new Folder(name,isPrivate, this));
+        subFolders.add(new Folder(name,isPrivate, this));
     }
 
     Folder getChildFolder(String name){
@@ -79,7 +83,7 @@ class Folder{
                 return;
             }
         }
-        throw VirtualFileException();
+        throw new VirtualFileException();
     }
 
     boolean isPrivate(){
@@ -126,7 +130,6 @@ class VirtualFileSystem{
             instance = new VirtualFileSystem();
             return instance;
         }
-
     }
 
     private VirtualFileSystem(){
@@ -137,7 +140,6 @@ class VirtualFileSystem{
         root.addFile(new File("myimage.bmp",myImg));
         Folder privateFolder = root.getChildFolder("private");
         privateFolder.addFile(new File("secret.txt", "UPUPDOWNDOWNLEFTRIGHTLEFTRIGHTBASTART"));
-        currentFolder = root;
         isLoggedIn = false;
     }
 
@@ -145,7 +147,7 @@ class VirtualFileSystem{
         String path = "";
         Folder tmp = currentFolder;
         while(tmp.getParent() != null){
-            path = "/" + tmp.getName + path;
+            path = "/" + tmp.getName() + path;
             tmp = currentFolder.getParent();
         }
         return "/" + path;
@@ -158,13 +160,13 @@ class VirtualFileSystem{
     Folder doCWD(Folder currentFolder,String childFolder, Boolean isLoggedIn)throws VirtualFileException , NotAuthorizedException{
         Folder nextFolder = currentFolder.getChildFolder(childFolder);
         if(nextFolder.isPrivate() && !isLoggedIn){
-            throw NotAuthorizedException();
+            throw new NotAuthorizedException();
         }
         
         if(nextFolder != null){
             return nextFolder;
         }else{
-            throw VirtualFileException();
+            throw new VirtualFileException();
         }
     }
 
@@ -172,7 +174,7 @@ class VirtualFileSystem{
         if(currentFolder.getParent() != null)
             return currentFolder.getParent();
         else{
-            throw VirtualFileException();
+            throw new VirtualFileException();
         }
 
     }
@@ -182,19 +184,19 @@ class VirtualFileSystem{
         if (tmp != null)
             return tmp;
 
-        throw VirtualFileException();
+        throw new VirtualFileException();
     }
 
     void addFile(Folder currentFolder, File newFile){
         currentFolder.addFile(newFile);
     }
 
-    void renameFile(Folder currentFolder, Stirng oldName, String newName){
+    void renameFile(Folder currentFolder, String oldName, String newName)throws VirtualFileException{
         File toChange = currentFolder.getFile(oldName);
         if(toChange != null){
             toChange.setName(newName);
         }else{
-            throw VirtualFileException();
+            throw new VirtualFileException();
         }
     }
     void deleteFile(Folder currentFolder,String name)throws VirtualFileException{
@@ -239,7 +241,8 @@ class File{
     int getLastModified(){
         DateFormat simple = new SimpleDateFormat("yyyyMMddHHmmss");
         Date date = new Date(this.lastModified);
-        return simple.format(Integer.parseInt(result.toString()));
+
+        return Integer.parseInt(simple.format(date).toString());
     }
 
 

@@ -3,11 +3,7 @@ import java.io.*;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Queue;
-import java.util.concurrent.TimeoutException;
-
-import javafx.scene.chart.PieChart.Data;
-import Folder.java;
+import java.util.*;
 
 class ControlChannel extends Thread {
 
@@ -27,7 +23,7 @@ class ControlChannel extends Thread {
     private Boolean isLoggedIn;
     public ControlChannel(Socket s) {
         this.socketControl = s;
-        requestInQueue = new Deque();
+        requestInQueue = new LinkedList<String>();
         currentFolder = VirtualFileSystem.getInstance().getRoot(); 
         isLoggedIn = false; 
     }
