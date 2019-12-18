@@ -77,7 +77,7 @@ public class FTPCode {
             case 530:
                 return "Not logged in.\n\r";
             case 550:
-                return "550 Requested action not taken. File unavailable. \n\r";
+                return "550 Requested action not taken. \n\r";
             case 551:
                 return"Requested action aborted. Page type unknown.\n\r";
             case 552:

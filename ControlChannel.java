@@ -103,6 +103,12 @@ class ControlChannel extends Thread {
                 break;
             
             case "CDUP"://go to parent directory, no arg
+                try{
+                    currentFolder = VirtualFileSystem.getInstance().doCDUP(currentFolder);
+                    controlResponse( new FTPCode().getMessage(200));
+                }catch(VirtualFileException e){
+                    controlResponse( new FTPCode().getMessage(550));
+                }
                 break;
             case "CWD"://change working directory, 1 arg directory path
                 break;
