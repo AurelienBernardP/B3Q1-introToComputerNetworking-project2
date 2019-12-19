@@ -7,7 +7,7 @@ import java.util.*;
 
 
 class DataChannel extends Thread {
-    private static final int TIMEOUT = 1000 * 7;
+    private static final int TIMEOUT = 1000 * 20;
 
     private ServerSocket serverDataChannel;
     private Socket socketData;
@@ -20,15 +20,15 @@ class DataChannel extends Thread {
 
     private ControlChannel controlChannel;
 
-    public DataChannel(ControlChannel controlChannel){
+    public DataChannel(ControlChannel controlChannel, int port){
         try {
-            serverDataChannel = new ServerSocket(0);
+            serverDataChannel = new ServerSocket(port);
             requestInQueue = new LinkedList<String>();
             this.controlChannel = controlChannel;
 
         } catch (Exception e) {
             controlChannel.controlResponse(new FTPCode().getMessage(425));
-            System.out.println("Data channel died: " + e);            
+            System.out.println("Data channel died: " + e);
         }
     }
 
@@ -38,25 +38,26 @@ class DataChannel extends Thread {
             // Setting a time limit
             this.socketData.setSoTimeout(TIMEOUT);
             this.socketData.setTcpNoDelay(true);
-
             // Input and output stream of the control socket
             outData = socketData.getOutputStream();
             inData = socketData.getInputStream();
             readerData = new BufferedReader(new InputStreamReader(inData));
         } catch (Exception e) {
             try {
-                socketData.close();                
-            } catch (Exception a){}
+                socketData.close();
+            } catch (Exception a){
+                System.out.println("Socket Data channel closed");
+            }
             controlChannel.controlResponse(new FTPCode().getMessage(425));
-            System.out.println("Data channel died: " + e);            
-
+            System.out.println("Socket Data channel died: " + e);
         }
     }
 
     @Override
     public void run(){
-            while (requestInQueue.peek() != null)
-                processRequest(requestInQueue.removeFirst());
+        startListening();
+        while (requestInQueue.peek() != null)
+            processRequest(requestInQueue.removeFirst());
     }
 
     public void addRequestInQueue(String request){
@@ -81,6 +82,11 @@ class DataChannel extends Thread {
         }
     
         switch (words[0]) {
+            case "LIST":
+                String list =  VirtualFileSystem.getInstance().getLIST(controlChannel.currentFolder);
+                dataResponse(list);
+                controlChannel.controlResponse(new FTPCode().getMessage(226));
+                break;
             case"SYN":
                 requestSyn(words);
                 break;
@@ -98,7 +104,6 @@ class DataChannel extends Thread {
         controlChannel.controlResponse(new FTPCode().getMessage(502));
         return;
     }
-
 
     void closeDataChannel(){
         try {
@@ -157,7 +162,6 @@ class DataChannel extends Thread {
 
         dataResponse("ACK");
         closeDataChannel();
-        controlChannel.dataChannelWorking = false;
         controlChannel.controlResponse(new FTPCode().getMessage(200));
         return;
     }

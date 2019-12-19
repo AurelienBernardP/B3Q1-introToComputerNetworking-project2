@@ -9,7 +9,7 @@ class ControlChannel extends Thread {
 
     private static final int TIMEOUT = 1000 * 20;
     private boolean isActive;
-    private boolean isBinary;
+    private boolean isBinary;//TYPE I or TYPE A
     private String user;
 
     private final Socket socketControl;    
@@ -19,7 +19,7 @@ class ControlChannel extends Thread {
 
     private DataChannel dataChannel;
 
-    private Folder currentFolder;
+    Folder currentFolder;
     private Boolean isLoggedIn;
     public ControlChannel(Socket s) {
         this.socketControl = s;
@@ -79,7 +79,20 @@ class ControlChannel extends Thread {
             case "FEAT":
                 requestFEAT();
                 break;
-    
+            case "EPSV":
+                if(words.length > 1){
+                    controlResponse(new FTPCode().getMessage(502));
+                    return;
+                }
+                requestEPSV();
+                break;
+            case "EPRT":
+                if(words.length > 2){
+                    controlResponse(new FTPCode().getMessage(502));
+                    return;
+                }
+                requestEPRT();
+                break;
             case "MDTM":
                 if(words.length != 2){
                     controlResponse("502 Command Not Implemented");
@@ -110,6 +123,7 @@ class ControlChannel extends Thread {
                 if(words[1].equals("A")){
                     controlResponse(new FTPCode().getMessage(200));
                     this.isBinary = false;
+                    break;
                 }
                 controlResponse(new FTPCode().getMessage(501));
                 break;
@@ -141,7 +155,6 @@ class ControlChannel extends Thread {
                 break;
 
             case "LIST"://see current directory content, no arg( we dont have to handle the case where there is an arg)
-                String list =  VirtualFileSystem.getInstance().getLIST(currentFolder);
                 controlResponse(new FTPCode().getMessage(200));
                 if(dataChannel != null){
                     dataChannel.addRequestInQueue("LIST");
@@ -175,6 +188,7 @@ class ControlChannel extends Thread {
                 requestUSER(words);
                 break;
             case"PASS": //input password, 1 arg, the password(i think we have to decription it as we receive it cripted)
+                requestPASS(words);
                 break;
             case"RENAME":
                 break; //rename a file in current directory , 2 args , current name of file, new filename.
@@ -186,8 +200,19 @@ class ControlChannel extends Thread {
         return;
     }
 
-    private void requestPASS(){
-        //DO THIS
+    private void requestPASS(String[] request){
+        if(request.length != 2){
+            controlResponse(new FTPCode().getMessage(502));
+            return;
+        }
+
+        if(user.equals("SAM") && request[1].equals("123456")){
+            isLoggedIn = true;
+            controlResponse(new FTPCode().getMessage(230));
+            return;
+        }
+        controlResponse(new FTPCode().getMessage(430));
+
     }
 
     private void requestUSER(String[] request){
@@ -201,13 +226,8 @@ class ControlChannel extends Thread {
             isLoggedIn = false;
             return;
         }
-        if(request[1].equals("SAM")){
-            controlResponse(new FTPCode().getMessage(331));
-            this.user = "SAM";
-            return;
-        }
-
-        controlResponse(new FTPCode().getMessage(430));
+        this.user = request[1];
+        controlResponse(new FTPCode().getMessage(331));
         return;
     }
 
@@ -237,14 +257,29 @@ class ControlChannel extends Thread {
     }
 
     private void requestPASV(){
-        dataChannel = new DataChannel(this);
-        System.out.println(dataChannel.getPort());
-        
+        dataChannel = new DataChannel(this, 0);
         int[] dataPort = getPassivePortAdrs(dataChannel.getPort());
         controlResponse(new FTPCode().getMessage(227) +" (" + socketControl.getLocalAddress().toString().replace('.', ',').replace("/","") +"," + Integer.toString(dataPort[0]) + "," + Integer.toString(dataPort[1]) + ")\r\n");    
         dataChannel.startListening();
         return;
     }
+
+    private void requestEPSV(){
+        dataChannel = new DataChannel(this, 0);
+        int[] dataPort = getPassivePortAdrs(dataChannel.getPort());
+        controlResponse(new FTPCode().getMessage(229) +" (" + socketControl.getLocalAddress().toString().replace('.', ',').replace("/","") +"," + Integer.toString(dataPort[0]) + "," + Integer.toString(dataPort[1]) + ")\r\n");    
+        return;
+    }
+
+//    2|ipv6|ipport
+//    The second command specifies that the server should use the IPv6 network
+//    protocol and the network address "1080::8:800:200C:417A" to open a
+//    TCP data connection on port 5282.
+    private void requestEPRT(){
+        dataChannel.start();
+        controlResponse(new FTPCode().getMessage(200));
+    }
+
 
     private int[] getPassivePortAdrs(int portNb){
         return new int[]{(portNb-(portNb%256))/256, portNb % 256};
@@ -284,21 +319,11 @@ class ControlChannel extends Thread {
             }
         }
 
-        //Check if connection already init
-        if(dataChannelWorking){
-            requestInQueue.addFirst(request[0] + request[1]);
-            return;
-        }
-
         int portClient = transitionClientPort(Integer.parseInt(interfaceClient[4]), Integer.parseInt(interfaceClient[5]));
         String ipClient = interfaceClient[0] +","+ interfaceClient[1] +","+ interfaceClient[2] +","+ interfaceClient[3];
 
-        dataChannelWorking = true;
-        this.dataChannel = new DataChannel(this);
-        if(dataChannel != null)
-            dataChannel.responseSyn();
-        else
-            controlResponse(new FTPCode().getMessage(502));
+        this.dataChannel = new DataChannel(this, portClient);
+        dataChannel.startListening();
         return;
     }
 

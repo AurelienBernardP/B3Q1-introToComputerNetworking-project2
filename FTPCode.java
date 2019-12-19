@@ -29,9 +29,9 @@ public class FTPCode {
             case 227:
                 return Integer.toString(code) + " Entering Passive Mode ";
             case 228:
-                return Integer.toString(code) + " Entering Long Passive Mode\r\n";
+                return Integer.toString(code) + " Entering Long Passive Mode ";
             case 229:
-                return Integer.toString(code) + " Entering Extended Passive Mode\r\n";
+                return Integer.toString(code) + " Entering Extended Passive Mode ";
             case 230:
                 return Integer.toString(code) + " User logged in, proceed.\r\n";
             case 231:
@@ -45,7 +45,7 @@ public class FTPCode {
             case 257:
                 return Integer.toString(code) + " ";
             case 331:
-                return Integer.toString(code) + " User name okay, need password.\r\n";
+                return Integer.toString(code) + " User name received, need password.\r\n";
             case 332:
                 return Integer.toString(code) + " Need account for login.\r\n";
             case 350:
