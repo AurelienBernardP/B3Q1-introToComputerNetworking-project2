@@ -12,13 +12,14 @@ class Folder{
 
     Folder(String name, Boolean isPrivate,Folder parent){
 
+        files = new ArrayList<File>();
+        subFolders = new ArrayList<Folder>();
         this.name = name;
         this.isPrivate = isPrivate;
         this.parent = parent;
     }
 
     void addFile(File newFile){
-
         Integer nbOccurances = 0 ;
 
         for (int i = 0; i < files.size(); i++){
@@ -40,6 +41,7 @@ class Folder{
 
     void addFolder(String name, Boolean isPrivate){
         subFolders.add(new Folder(name,isPrivate, this));
+
     }
 
     Folder getChildFolder(String name){
@@ -118,7 +120,7 @@ class VirtualFileSystem{
         -9, -33, -64,  0,  0,  0,   -1,  -1,  -8,  31, -64,   0,   0,  0,   -1,  -1,
         -1,  -1, -64,  0,  0,  0
         
-    };
+        };
 
     private static VirtualFileSystem instance = null;
 
@@ -134,7 +136,6 @@ class VirtualFileSystem{
 
     private VirtualFileSystem(){
         root = new Folder("/", false, null);
-
         root.addFolder("private",true);
         root.addFile(new File("myText.txt","Irasshaimase"));
         root.addFile(new File("myimage.bmp",myImg));
@@ -188,6 +189,8 @@ class VirtualFileSystem{
     }
 
     void addFile(Folder currentFolder, File newFile){
+        System.out.println("Dans virtual addFile");
+
         currentFolder.addFile(newFile);
     }
 

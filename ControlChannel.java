@@ -24,7 +24,7 @@ class ControlChannel extends Thread {
     public ControlChannel(Socket s) {
         this.socketControl = s;
         requestInQueue = new LinkedList<String>();
-        //currentFolder = VirtualFileSystem.getInstance().getRoot();  IL Y A un null exception ici!
+        currentFolder = VirtualFileSystem.getInstance().getRoot();
         isLoggedIn = false; 
     }
 
