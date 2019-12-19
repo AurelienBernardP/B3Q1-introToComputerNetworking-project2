@@ -104,6 +104,13 @@ class ControlChannel extends Thread {
                 }
                 requestPASV();
                 return;
+            case "TYPE":
+                if(words[1].equals("I"))
+                    controlResponse(new FTPCode().getMessage(200));
+                if(words[1].equals("A"))
+                    controlResponse(new FTPCode().getMessage(200));
+                controlResponse(new FTPCode().getMessage(501));
+                break;
             case "PORT":
                 requestPORT(words);
                 break;
@@ -134,7 +141,7 @@ class ControlChannel extends Thread {
             case "LIST"://see current directory content, no arg( we dont have to handle the case where there is an arg)
                     String list =  VirtualFileSystem.getInstance().getLIST(currentFolder);
                     controlResponse(new FTPCode().getMessage(200));
-                    controlResponse(list + "\n\r");
+                    controlResponse(list + "\r\n");
                 break;
 
             case "PWD"://gives path of current directory, no arg
