@@ -178,7 +178,7 @@ class ControlChannel extends Thread {
 
         if(request[1].equals("anonymous")){
             controlResponse(new FTPCode().getMessage(230));
-            isLoggedIn = true;
+            isLoggedIn = false;
             return;
         }
         if(request[1].equals("SAM")){
