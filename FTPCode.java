@@ -43,7 +43,7 @@ public class FTPCode {
             case 253:
                 return "253 last modification data correctly retrieved \r\n";
             case 257:
-                return "257 created.\r\n";
+                return "257 ";
             case 331:
                 return "User name okay, need password.\r\n";
             case 332:

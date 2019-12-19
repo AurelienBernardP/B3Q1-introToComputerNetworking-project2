@@ -138,7 +138,7 @@ class ControlChannel extends Thread {
                 break;
 
             case "PWD"://gives path of current directory, no arg
-                    controlResponse(VirtualFileSystem.getInstance().getPWD(currentFolder) + "\n\r");
+                controlResponse(new FTPCode().getMessage(257) + VirtualFileSystem.getInstance().getPWD(currentFolder) + "\r\n");
                 break;
 
             case "DELETE":// delete file in the current directory, 1 arg, the file name
