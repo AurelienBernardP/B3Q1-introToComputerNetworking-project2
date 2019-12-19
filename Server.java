@@ -7,7 +7,7 @@ import java.net.Socket;
  */
 public class Server {
 
-   private static final int port = 2101;
+   private static final int port = 2146;
    private static int nbThreads = 0;
    private static int maxThreads;
 
@@ -21,9 +21,6 @@ public class Server {
          System.err.println("wrong use of arguments");
          return;
       }
-
-
-
       try {
          //Creating a server socket listening on a port
          server = new ServerSocket(port);

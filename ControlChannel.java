@@ -10,6 +10,7 @@ class ControlChannel extends Thread {
     private static final int TIMEOUT = 1000 * 20;
     private Deque<String> requestInQueue;
     private boolean isActive;
+    private boolean isBinary;
     boolean dataChannelWorking;
 
     private final Socket socketControl;    
@@ -105,10 +106,15 @@ class ControlChannel extends Thread {
                 requestPASV();
                 return;
             case "TYPE":
-                if(words[1].equals("I"))
+                if(words[1].equals("I")){
                     controlResponse(new FTPCode().getMessage(200));
-                if(words[1].equals("A"))
+                    this.isBinary = true;
+                    break;
+                }
+                if(words[1].equals("A")){
                     controlResponse(new FTPCode().getMessage(200));
+                    this.isBinary = false;
+                }
                 controlResponse(new FTPCode().getMessage(501));
                 break;
             case "PORT":
@@ -288,7 +294,7 @@ class ControlChannel extends Thread {
         String ipClient = interfaceClient[0] +"."+ interfaceClient[1] +"."+ interfaceClient[2] +"."+ interfaceClient[3];
 
         dataChannelWorking = true;
-        this.dataChannel = new DataChannel(this, ipClient, portClient, 2001);
+        this.dataChannel = new DataChannel(this, ipClient, portClient, 2046);
         if(dataChannel != null)
             dataChannel.responseSyn();
         else

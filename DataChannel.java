@@ -25,6 +25,7 @@ class DataChannel extends Thread {
     }
 
     public int getPort(){
+        System.out.println(socketData.getLocalPort());
         return socketData.getLocalPort();
     }
 
