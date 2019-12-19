@@ -66,10 +66,10 @@ class Folder{
         String list = "";
 
         for (int i = 0; i < subFolders.size(); i++){
-            list += (subFolders.get(i).getName() + " ");
+            list += "+" + "\t" +(subFolders.get(i).getName() + "\r\n");
         }
         for (int i = 0; i < files.size(); i++){
-            list += (files.get(i).getName() + " ");
+            list += "+" +files.get(i).getLastModified()+"\t" +(files.get(i).getName() + "\r\n");
         }
         return list;
     }
@@ -159,16 +159,22 @@ class VirtualFileSystem{
     }
 
     Folder doCWD(Folder currentFolder,String childFolder, Boolean isLoggedIn)throws VirtualFileException , NotAuthorizedException{
+        System.out.println("In docwd");
+        System.out.println(childFolder);
+
         Folder nextFolder = currentFolder.getChildFolder(childFolder);
+        System.out.println("after getchilkdfolder");
+
+        if(nextFolder == null){
+            System.out.println("Exception");
+            throw new VirtualFileException();
+        }
+
         if(nextFolder.isPrivate() && !isLoggedIn){
             throw new NotAuthorizedException();
         }
-        
-        if(nextFolder != null){
-            return nextFolder;
-        }else{
-            throw new VirtualFileException();
-        }
+
+        return nextFolder;
     }
 
     Folder doCDUP(Folder currentFolder)throws VirtualFileException{
@@ -241,11 +247,12 @@ class File{
         lastModified = System.currentTimeMillis();
     }
     //FORMAT YYYYMMDDhhmmss
-    int getLastModified(){
+    String getLastModified(){
         DateFormat simple = new SimpleDateFormat("yyyyMMddHHmmss");
         Date date = new Date(this.lastModified);
-
-        return Integer.parseInt(simple.format(date).toString());
+        System.out.println(date.toString());
+        System.out.println(simple.format(date).toString());
+        return simple.format(date).toString();
     }
 
 

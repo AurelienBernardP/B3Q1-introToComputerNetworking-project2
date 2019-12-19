@@ -27,7 +27,7 @@ public class FTPCode {
             case 226:
                 return Integer.toString(code) + " Closing data connection. Requested file action successful\r\n";
             case 227:
-                return Integer.toString(code) + " Entering Passive Mode\r\n";
+                return Integer.toString(code) + " Entering Passive Mode ";
             case 228:
                 return Integer.toString(code) + " Entering Long Passive Mode\r\n";
             case 229:

@@ -1,39 +1,39 @@
 
 import java.io.*;
 import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.*;
 
 
 class DataChannel extends Thread {
     private static final int TIMEOUT = 1000 * 7;
 
+    private ServerSocket serverDataChannel;
     private Socket socketData;
     private OutputStream outData;
     private InputStream inData;
+    private Deque<String> requestInQueue;
     private BufferedReader readerData;
 
     private ControlChannel controlChannel;
 
-    public DataChannel(ControlChannel controlChannel, String ipClient, int portClient, int portData){
+    public DataChannel(ControlChannel controlChannel){
         try {
+            serverDataChannel = new ServerSocket(0);
+            requestInQueue = new LinkedList<String>();
             this.controlChannel = controlChannel;
-            this.socketData = new Socket(ipClient, portClient, InetAddress.getLocalHost(),portData);
+
         } catch (Exception e) {
             controlChannel.controlResponse(new FTPCode().getMessage(425));
             System.out.println("Data channel died: " + e);            
         }
     }
 
-    public int getPort(){
-        System.out.println(socketData.getLocalPort());
-        return socketData.getLocalPort();
-    }
-
-    @Override
-    public void run(){
-        String request;
-
+    public void startListening(){
         try {
+            this.socketData = serverDataChannel.accept();
+
             // Setting a time limit
             this.socketData.setSoTimeout(TIMEOUT);
             this.socketData.setTcpNoDelay(true);
@@ -42,22 +42,22 @@ class DataChannel extends Thread {
             outData = socketData.getOutputStream();
             inData = socketData.getInputStream();
             readerData = new BufferedReader(new InputStreamReader(inData));
-            request = new String();
-
-            while (true) {
-                // Reading the input stream of the control socket
-                request = readerData.readLine();
-                if (request != null)
-                    processRequest(request);
-            }
-        } catch (Exception any) {
+        } catch (Exception e) {
             try {
                 socketData.close();                
-            } catch (Exception e){}
+            } catch (Exception a){}
             controlChannel.controlResponse(new FTPCode().getMessage(425));
-            System.err.println("Data Channel died: " + any);
-            return;
+            System.out.println("Data channel died: " + e);            
+
         }
+    }
+
+    public void requestLIST(){
+
+    }
+
+    public int getPort(){
+        return serverDataChannel.getLocalPort();
     }
 
     private void processRequest(String request) {

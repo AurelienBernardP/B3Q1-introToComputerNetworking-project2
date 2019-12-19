@@ -8,10 +8,10 @@ import java.util.*;
 class ControlChannel extends Thread {
 
     private static final int TIMEOUT = 1000 * 20;
-    private Deque<String> requestInQueue;
     private boolean isActive;
     private boolean isBinary;
     boolean dataChannelWorking;
+    private String user;
 
     private final Socket socketControl;    
     private OutputStream outControl;
@@ -24,9 +24,9 @@ class ControlChannel extends Thread {
     private Boolean isLoggedIn;
     public ControlChannel(Socket s) {
         this.socketControl = s;
-        requestInQueue = new LinkedList<String>();
         currentFolder = VirtualFileSystem.getInstance().getRoot();
-        isLoggedIn = false; 
+        isLoggedIn = false;
+        dataChannelWorking = false;
     }
 
     @Override
@@ -50,11 +50,9 @@ class ControlChannel extends Thread {
                 System.out.println("Request = "+ request);
 
                 if (request != null)
-                    requestInQueue.addLast(request);
-                if(requestInQueue.peek() != null)
-                    processRequest(requestInQueue.removeFirst());
+                    processRequest(request);
 
-                if(request == null && requestInQueue.peek() == null){
+                if(request == null){
                     Server.threadKilled();
                     return;
                 }
@@ -90,8 +88,8 @@ class ControlChannel extends Thread {
                     return;
                 }
                 try{
-                    Integer lastModified = VirtualFileSystem.getInstance().getFile(currentFolder, words[1]).getLastModified();
-                    controlResponse(new FTPCode().getMessage(253) +" " +lastModified.toString() +"\n\r"); 
+                    String lastModified = VirtualFileSystem.getInstance().getFile(currentFolder, words[1]).getLastModified();
+                    controlResponse(new FTPCode().getMessage(253) +" " +lastModified +"\n\r"); 
                 }catch(VirtualFileException e){
                     controlResponse(new FTPCode().getMessage(550));
                 }
@@ -138,16 +136,24 @@ class ControlChannel extends Thread {
                     VirtualFileSystem.getInstance().doCWD(currentFolder,words[1],isLoggedIn);
                     controlResponse(new FTPCode().getMessage(200));
                 }catch(VirtualFileException e){
-                    controlResponse(new FTPCode().getMessage(504));
+                    controlResponse(new FTPCode().getMessage(450));
                 }catch(NotAuthorizedException r){
                     controlResponse(new FTPCode().getMessage(550));
                 }
                 break;
 
             case "LIST"://see current directory content, no arg( we dont have to handle the case where there is an arg)
-                    String list =  VirtualFileSystem.getInstance().getLIST(currentFolder);
-                    controlResponse(new FTPCode().getMessage(200));
-                    controlResponse(list + "\r\n");
+                String list =  VirtualFileSystem.getInstance().getLIST(currentFolder);
+                controlResponse(new FTPCode().getMessage(200));
+                    if(!dataChannelWorking){
+                        if(dataChannel != null){
+                            dataChannel.addRequestInQueue("LIST");
+                            dataChannel.start();
+                        }
+                    }
+                    else{
+                        dataChannel.addRequestInQueue("LIST");
+                    }
                 break;
 
             case "PWD"://gives path of current directory, no arg
@@ -184,6 +190,10 @@ class ControlChannel extends Thread {
         return;
     }
 
+    private void requestPASS(){
+        //DO THIS
+    }
+
     private void requestUSER(String[] request){
         if(request.length != 2){
             controlResponse(new FTPCode().getMessage(502));
@@ -197,7 +207,7 @@ class ControlChannel extends Thread {
         }
         if(request[1].equals("SAM")){
             controlResponse(new FTPCode().getMessage(331));
-            isLoggedIn = true;
+            this.user = "SAM";
             return;
         }
 
@@ -233,15 +243,15 @@ class ControlChannel extends Thread {
     private void requestPASV(){
 
         if(!dataChannelWorking){
-            Integer portClient = socketControl.getPort();
-            String ipClient = socketControl.getInetAddress().getAddress().toString();
-
-            dataChannel = new DataChannel(this, ipClient, portClient, 0);
+            dataChannel = new DataChannel(this);
+            System.out.println(dataChannel.getPort());
+            
             int[] dataPort = getPassivePortAdrs(dataChannel.getPort());
-            controlResponse(new FTPCode().getMessage(227) + " (" + socketControl.getLocalAddress().toString() + Integer.toString(dataPort[0]) + "." + Integer.toString(dataPort[1]) + ")\r\n");    
+            controlResponse(new FTPCode().getMessage(227) +" (" + socketControl.getLocalAddress().toString().replace('.', ',').replace("/","") +"," + Integer.toString(dataPort[0]) + "," + Integer.toString(dataPort[1]) + ")\r\n");    
+            dataChannel.startListening();
         }
         else{
-            requestInQueue.addFirst("PASV\r\n");
+            dataChannel.addRequestInQueue("PASV");
         }
         return;
     }
@@ -291,10 +301,10 @@ class ControlChannel extends Thread {
         }
 
         int portClient = transitionClientPort(Integer.parseInt(interfaceClient[4]), Integer.parseInt(interfaceClient[5]));
-        String ipClient = interfaceClient[0] +"."+ interfaceClient[1] +"."+ interfaceClient[2] +"."+ interfaceClient[3];
+        String ipClient = interfaceClient[0] +","+ interfaceClient[1] +","+ interfaceClient[2] +","+ interfaceClient[3];
 
         dataChannelWorking = true;
-        this.dataChannel = new DataChannel(this, ipClient, portClient, 2046);
+        this.dataChannel = new DataChannel(this);
         if(dataChannel != null)
             dataChannel.responseSyn();
         else
