@@ -10,7 +10,6 @@ class ControlChannel extends Thread {
     private static final int TIMEOUT = 1000 * 20;
     private boolean isActive;
     private boolean isBinary;
-    boolean dataChannelWorking;
     private String user;
 
     private final Socket socketControl;    
@@ -26,7 +25,6 @@ class ControlChannel extends Thread {
         this.socketControl = s;
         currentFolder = VirtualFileSystem.getInstance().getRoot();
         isLoggedIn = false;
-        dataChannelWorking = false;
     }
 
     @Override
@@ -145,15 +143,13 @@ class ControlChannel extends Thread {
             case "LIST"://see current directory content, no arg( we dont have to handle the case where there is an arg)
                 String list =  VirtualFileSystem.getInstance().getLIST(currentFolder);
                 controlResponse(new FTPCode().getMessage(200));
-                    if(!dataChannelWorking){
-                        if(dataChannel != null){
-                            dataChannel.addRequestInQueue("LIST");
-                            dataChannel.start();
-                        }
-                    }
-                    else{
-                        dataChannel.addRequestInQueue("LIST");
-                    }
+                if(dataChannel != null){
+                    dataChannel.addRequestInQueue("LIST");
+                    dataChannel.start();
+                }else{
+                    controlResponse(new FTPCode().getMessage(426));
+                }
+                
                 break;
 
             case "PWD"://gives path of current directory, no arg
@@ -241,18 +237,12 @@ class ControlChannel extends Thread {
     }
 
     private void requestPASV(){
-
-        if(!dataChannelWorking){
-            dataChannel = new DataChannel(this);
-            System.out.println(dataChannel.getPort());
-            
-            int[] dataPort = getPassivePortAdrs(dataChannel.getPort());
-            controlResponse(new FTPCode().getMessage(227) +" (" + socketControl.getLocalAddress().toString().replace('.', ',').replace("/","") +"," + Integer.toString(dataPort[0]) + "," + Integer.toString(dataPort[1]) + ")\r\n");    
-            dataChannel.startListening();
-        }
-        else{
-            dataChannel.addRequestInQueue("PASV");
-        }
+        dataChannel = new DataChannel(this);
+        System.out.println(dataChannel.getPort());
+        
+        int[] dataPort = getPassivePortAdrs(dataChannel.getPort());
+        controlResponse(new FTPCode().getMessage(227) +" (" + socketControl.getLocalAddress().toString().replace('.', ',').replace("/","") +"," + Integer.toString(dataPort[0]) + "," + Integer.toString(dataPort[1]) + ")\r\n");    
+        dataChannel.startListening();
         return;
     }
 

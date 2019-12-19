@@ -13,8 +13,10 @@ class DataChannel extends Thread {
     private Socket socketData;
     private OutputStream outData;
     private InputStream inData;
-    private Deque<String> requestInQueue;
     private BufferedReader readerData;
+
+    private Deque<String> requestInQueue;
+
 
     private ControlChannel controlChannel;
 
@@ -33,7 +35,6 @@ class DataChannel extends Thread {
     public void startListening(){
         try {
             this.socketData = serverDataChannel.accept();
-
             // Setting a time limit
             this.socketData.setSoTimeout(TIMEOUT);
             this.socketData.setTcpNoDelay(true);
@@ -52,7 +53,18 @@ class DataChannel extends Thread {
         }
     }
 
-    public void requestLIST(){
+    @Override
+    public void run(){
+            while (requestInQueue.peek() != null)
+                processRequest(requestInQueue.removeFirst());
+    }
+
+    public void addRequestInQueue(String request){
+        if(request == null)
+            return;
+        
+        this.requestInQueue.addLast(request);
+        return;
 
     }
 
