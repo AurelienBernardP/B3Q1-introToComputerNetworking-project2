@@ -46,8 +46,6 @@ class ControlChannel extends Thread {
             while (true) {
                 // Reading the input stream of the control socket
                 request = readerControl.readLine();
-                System.out.println("Request = "+ request);
-
                 if (request != null)
                     processRequest(request);
 
@@ -65,7 +63,7 @@ class ControlChannel extends Thread {
         }
     }
 
-    private void processRequest(String request) {
+    private void processRequest(String request) throws Exception {
         String[] words = request.split(" ");
     
         if (words.length <= 0) {
@@ -233,8 +231,8 @@ class ControlChannel extends Thread {
             case"EXIT":
             case"CLOSE":
             case"DISCONNECT":
-                controlResponse("Disconnecting, BYE!");
-                return;
+                controlResponse(new FTPCode().getMessage(221));
+                throw new Exception();
             case"USER": //input user name, 1 arg, the user name
                 requestUSER(words);
                 break;

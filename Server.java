@@ -7,7 +7,7 @@ import java.net.Socket;
  */
 public class Server {
 
-   private static final int port = 2146;
+   private static final int port = 21;
    private static int nbThreads = 0;
    private static int maxThreads;
    public static void main(String argv[]) throws Exception {
