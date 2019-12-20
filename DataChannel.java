@@ -126,7 +126,8 @@ class DataChannel extends Thread {
                     controlChannel.controlResponse(new FTPCode().getMessage(226));
                     try {
                         socketData.close();
-                        serverDataChannel.close();
+                        if(isPassive)
+                            serverDataChannel.close();
                     } catch (Exception a){
                         System.out.println("Socket Data channel closed");
                         return;
