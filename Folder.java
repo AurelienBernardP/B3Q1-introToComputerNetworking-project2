@@ -115,7 +115,21 @@ class Folder{
 
 class VirtualFileSystem{
     private Folder root;
-    private byte[] myImg = {66,  77,  70,  1,  0,  0,    0,   0,   0,   0,  62,   0,   0,  0,   40,   0,
+
+    private static VirtualFileSystem instance = null;
+
+    static VirtualFileSystem getInstance(){
+
+        if(instance != null ){
+            return instance;
+        }else{
+            instance = new VirtualFileSystem();
+            return instance;
+        }
+    }
+
+    private VirtualFileSystem(){
+        byte[] myImg = {66,  77,  70,  1,  0,  0,    0,   0,   0,   0,  62,   0,   0,  0,   40,   0,
             0,   0,  34,  0,  0,  0,   33,   0,   0,   0,   1,   0,   1,  0,    0,   0,
             0,   0,   8,  1,  0,  0,    0,   0,   0,   0,   0,   0,   0,  0,    0,   0,
             0,   0,   0,  0,  0,  0,    0,   0,   0,   0,  -1,  -1,  -1,  0,   -1,  -1,
@@ -138,20 +152,6 @@ class VirtualFileSystem{
         -1,  -1, -64,  0,  0,  0
         
         };
-
-    private static VirtualFileSystem instance = null;
-
-    static VirtualFileSystem getInstance(){
-
-        if(instance != null ){
-            return instance;
-        }else{
-            instance = new VirtualFileSystem();
-            return instance;
-        }
-    }
-
-    private VirtualFileSystem(){
         root = new Folder("/", false, null);
         root.addFolder("private",true);
         root.addFile(new File("mytext.txt","Irasshaimase"));
