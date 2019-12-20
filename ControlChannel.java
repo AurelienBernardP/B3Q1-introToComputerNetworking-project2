@@ -11,6 +11,7 @@ class ControlChannel extends Thread {
     private boolean isActive;
     private boolean isBinary;//TYPE I or TYPE A
     private String user;
+    private File selectedFile;
 
     private final Socket socketControl;    
     private OutputStream outControl;
@@ -150,6 +151,26 @@ class ControlChannel extends Thread {
                 }
                 break;
 
+            case "RNFR":
+                if(words.length != 2){
+                    controlResponse(new FTPCode().getMessage(504));
+                    return;
+                }
+                try {
+                    selectedFile = VirtualFileSystem.getInstance().getFile(currentFolder, words[1]);
+                    controlResponse(new FTPCode().getMessage(350));
+                } catch (Exception e) {
+                    controlResponse(new FTPCode().getMessage(550));
+                }
+                break;
+            case "RNTO":
+                if(words.length != 2){
+                    controlResponse(new FTPCode().getMessage(504));
+                    return;
+                }
+                selectedFile.setName(words[1]);
+                controlResponse(new FTPCode().getMessage(250));
+                break;
             case "LIST"://see current directory content, no arg( we dont have to handle the case where there is an arg)
                 if(dataChannel != null){
                     // dataChannel.addRequestInQueue("TYPE A");
@@ -160,11 +181,23 @@ class ControlChannel extends Thread {
                 }
                 break;
 
+            case "STOR":
+                if(words.length != 2){
+                    controlResponse(new FTPCode().getMessage(504));
+                    return;
+                }
+                try {
+                    currentFolder.addFile(new File());
+                } catch (Exception e) {
+                    //TODO: handle exception
+                }
+                break;
+
             case "PWD"://gives path of current directory, no arg
                 controlResponse(new FTPCode().getMessage(257) + VirtualFileSystem.getInstance().getPWD(currentFolder) + "\r\n");
                 break;
 
-            case "DELETE":// delete file in the current directory, 1 arg, the file name
+            case "DELE":// delete file in the current directory, 1 arg, the file name
                 if(words.length != 2){
                     controlResponse(new FTPCode().getMessage(504));
                     return;

@@ -210,7 +210,9 @@ class VirtualFileSystem{
 
     }
     synchronized void doDelete(Folder currentFolder, String toDelete)throws VirtualFileException{
-        currentFolder.deleteFile(toDelete);
+        int lastSlash = toDelete.lastIndexOf("/");
+        String deleteFile = toDelete.substring(lastSlash +1,toDelete.length());
+        currentFolder.deleteFile(deleteFile);
     }
 
     File getFile(Folder currentFolder,String name)throws VirtualFileException{
