@@ -68,6 +68,8 @@ public class FTPCode {
                 return Integer.toString(code) + " Requested action not taken.\r\n";
             case 500:
                 return Integer.toString(code) + " Syntax error in parameters or arguments.\r\n";
+            case 501:
+                return Integer.toString(code) + " Syntax error in parameters or arguments.\r\n";
             case 502:
                 return Integer.toString(code) + " Command not implemented.\r\n";
             case 503:
