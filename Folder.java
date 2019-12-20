@@ -81,12 +81,12 @@ class Folder{
             Folder s = subFolders.get(i);
             if(s.isPrivate() && !isLogged)
                 continue;
-            list += "d      " + s.getSize() + " " + s.getLastModified() + " " +(s.getName() + "\r\n");
+            list += "d\t" + s.getSize() + " " + s.getLastModified() + " " +(s.getName() + "\r\n");
         }
 
         for (int i = 0; i < files.size(); i++){
             File f = files.get(i);
-            list += "-      " + f.getSize() +  " " + f.getLastModified()+" " +(f.getName() + "\r\n");
+            list += "-\t" + f.getSize() +  " " + f.getLastModified()+" " +(f.getName() + "\r\n");
         }
 
         return list;

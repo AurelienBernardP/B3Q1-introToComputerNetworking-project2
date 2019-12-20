@@ -37,7 +37,10 @@ class DataChannel extends Thread {
         try {
 
                 //Starts listening
+                System.out.print("Before listening");
                 this.socketData = serverDataChannel.accept();
+                System.out.print("After listening");
+
                 // Setting a time limit
                 this.socketData.setSoTimeout(TIMEOUT);
                 this.socketData.setTcpNoDelay(true);
@@ -93,15 +96,15 @@ class DataChannel extends Thread {
                 break;
 
             case "RETR":
-                File retrievedFile = VirtualFileSystem.getInstance().getFile(controlChannel.currentFolder,words[1]);
                 try {
+                File retrievedFile = VirtualFileSystem.getInstance().getFile(controlChannel.currentFolder,words[1]);
                     outData.write(retrievedFile.getContent());
                     controlChannel.controlResponse(new FTPCode().getMessage(226));
                     try {
                         socketData.close();
                     } catch (Exception a){
                         System.out.println("Socket Data channel closed");
-                    }
+                    }//TO HANDLE EXEPCEPTION
 
                 } catch (Exception e) {
                     controlChannel.controlResponse(new FTPCode().getMessage(426));
@@ -144,7 +147,7 @@ class DataChannel extends Thread {
                 }*/
                 break;
             case "LIST":
-                String list =  VirtualFileSystem.getInstance().getLIST(controlChannel.currentFolder,controlChannel.isLoggedIn());
+                String list =  VirtualFileSystem.getInstance().getLIST(controlChannel.currentFolder,controlChannel.isLoggedIn);
                 dataResponse(list);
                 controlChannel.controlResponse(new FTPCode().getMessage(226));
                 return;

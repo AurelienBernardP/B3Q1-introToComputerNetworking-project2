@@ -20,7 +20,7 @@ class ControlChannel extends Thread {
     private DataChannel dataChannel;
 
     Folder currentFolder;
-    private Boolean isLoggedIn;
+    Boolean isLoggedIn;
     public ControlChannel(Socket s) {
         this.socketControl = s;
         currentFolder = VirtualFileSystem.getInstance().getRoot();
@@ -50,7 +50,8 @@ class ControlChannel extends Thread {
                 if (request != null)
                     processRequest(request);
 
-                if(request == null){
+                if(inControl == null){
+                    System.out.println("Server is dead");
                     Server.threadKilled();
                     return;
                 }
@@ -85,13 +86,6 @@ class ControlChannel extends Thread {
                     return;
                 }
                 requestEPSV();
-                break;
-            case "EPRT":
-                if(words.length > 2){
-                    controlResponse(new FTPCode().getMessage(502));
-                    return;
-                }
-                requestEPRT();
                 break;
             case "MDTM":
                 if(words.length != 2){
@@ -146,7 +140,7 @@ class ControlChannel extends Thread {
                 }
                 try{
                     VirtualFileSystem.getInstance().doCWD(currentFolder,words[1],isLoggedIn);
-                    controlResponse(new FTPCode().getMessage(200));
+                    controlResponse(new FTPCode().getMessage(250));
                 }catch(VirtualFileException e){
                     controlResponse(new FTPCode().getMessage(450));
                 }catch(NotAuthorizedException r){
@@ -155,10 +149,10 @@ class ControlChannel extends Thread {
                 break;
 
             case "LIST"://see current directory content, no arg( we dont have to handle the case where there is an arg)
-                controlResponse(new FTPCode().getMessage(150));
                 if(dataChannel != null){
-                    dataChannel.addRequestInQueue("TYPE A");
+                    // dataChannel.addRequestInQueue("TYPE A");
                     dataChannel.addRequestInQueue("LIST");
+                    controlResponse(new FTPCode().getMessage(150));
                 }else{
                     controlResponse(new FTPCode().getMessage(426));
                 }
@@ -184,6 +178,7 @@ class ControlChannel extends Thread {
                         dataChannel.addRequestInQueue("TYPE A");
                     }
                     dataChannel.addRequestInQueue(request);
+                    dataChannel.start();
                 }else{
                     controlResponse(new FTPCode().getMessage(426));
                 }
@@ -301,17 +296,6 @@ class ControlChannel extends Thread {
         dataChannel.start();
         return;
     }
-
-//    2|ipv6|ipport
-//    The second command specifies that the server should use the IPv6 network
-//    protocol and the network address "1080::8:800:200C:417A" to open a
-//    TCP data connection on port 5282.
-    private void requestEPRT(){
-        dataChannel.start();
-        controlResponse(new FTPCode().getMessage(200));
-
-    }
-
 
     private int[] getPassivePortAdrs(int portNb){
         return new int[]{(portNb-(portNb%256))/256, portNb % 256};
