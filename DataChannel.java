@@ -15,6 +15,7 @@ class DataChannel extends Thread {
     private InputStream inData;
     private BufferedReader readerData;
     private Boolean isBin;
+    private Boolean isPassive;
     private Deque<String> requestInQueue;
 
 
@@ -32,6 +33,7 @@ class DataChannel extends Thread {
     public void startListening(InetAddress ipClient, int portClient, InetAddress local, int localPort){
         try {
             this.socketData = new Socket(ipClient, portClient, local, localPort);
+            socketData.setReuseAddress(true);
         } catch (Exception e) {
             System.out.println("Cannot listen on data channel: "+ e);
         }
@@ -40,10 +42,11 @@ class DataChannel extends Thread {
 
 
 
-    public DataChannel(ControlChannel controlChannel,int port, boolean openServer){
+    public DataChannel(ControlChannel controlChannel,int port, boolean isPassive){
         try {
             isBin = true;
-            if(openServer)
+            this.isPassive = isPassive;
+            if(isPassive)
                 serverDataChannel = new ServerSocket(port);
             requestInQueue = new LinkedList<String>();
             this.controlChannel = controlChannel;
@@ -56,11 +59,7 @@ class DataChannel extends Thread {
     @Override
     public void run(){
         try {
-
-                //Starts listening
-                System.out.print("Before listening");
-                System.out.print("After listening");
-
+                System.out.println("Thread is runnong");
                 // Setting a time limit
                 this.socketData.setSoTimeout(TIMEOUT);
                 this.socketData.setTcpNoDelay(true);
@@ -71,8 +70,9 @@ class DataChannel extends Thread {
                 while (requestInQueue.peek() != null)
                     processRequest(requestInQueue.removeFirst());
                 socketData.close();
-                serverDataChannel.close();
-                System.out.print("Closed everything and out");
+                if(isPassive)
+                    serverDataChannel.close();
+                System.out.println("Closed everything and out");
                 return;
         } catch (Exception e) {
             try {
@@ -183,15 +183,6 @@ class DataChannel extends Thread {
                 dataResponse(list);
                 controlChannel.controlResponse(new FTPCode().getMessage(226));
                 return;
-            case"SYN":
-                requestSyn(words);
-                break;
-            case"ACK":
-                requestAck(words);
-                break;
-            case"SYN, ACK":
-                requestSynAck(request.split(","));
-                break;
             default:
                 controlChannel.controlResponse(new FTPCode().getMessage(502));
                 return;
@@ -208,49 +199,8 @@ class DataChannel extends Thread {
         }
     }
 
-    void responseSyn(){
-        dataResponse("SYN");
-        return;
-    }
-
-    void responseAck(){
-        dataResponse("ACK");
-        return;
-    }
-
     void setIsBin(Boolean isBin){
         this.isBin = isBin;
-    }
-
-
-    private void requestAck(String[] request){
-        return;
-    }
-
-
-    private void requestSyn(String[] request){
-        dataResponse("SYN, ACK");
-        return;
-    }
-
-    private void requestSynAck(String[] request){
-        
-        /*//Check length of request
-        if(request.length != 2){
-            controlResponse(new FTPCode().getMessage(502));
-            return;
-        }
-
-        //Check if request is all characters
-        if(request[0] != "SYN" && request[1] != " ACK")
-                controlResponse(FTPCode().getMessage(501));
-                return;
-            }
-        }*/
-
-        dataResponse("ACK");
-        controlChannel.controlResponse(new FTPCode().getMessage(200));
-        return;
     }
 
     int transitionClientPort(int x, int y){
