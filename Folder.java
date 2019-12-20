@@ -260,6 +260,7 @@ class File{
     File(String name, String content){
         this.name = name;
         this.content = content.getBytes();
+        lastModified = System.currentTimeMillis();
     }
 
     String getName(){

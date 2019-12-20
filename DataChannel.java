@@ -20,12 +20,27 @@ class DataChannel extends Thread {
 
     private ControlChannel controlChannel;
 
-    public DataChannel(ControlChannel controlChannel,int port){
+    public DataChannel(ControlChannel controlChannel,int port, String typeConnection){
         try {
             isBin = true;
             serverDataChannel = new ServerSocket(port);
             requestInQueue = new LinkedList<String>();
             this.controlChannel = controlChannel;
+
+            switch (typeConnection) {
+                case "EPSV":
+                    controlChannel.controlResponse(new FTPCode().getMessage(229) +" (|||" + getPort() + "|)\r\n");
+                    break;
+                case "PASV":
+                    int[] dataPort = controlChannel.getPassivePortAdrs(getPort());
+                    controlChannel.controlResponse(new FTPCode().getMessage(227) +" (" + serverDataChannel.getInetAddress().toString().replace('.', ',').replace("/","") +"," + Integer.toString(dataPort[0]) + "," + Integer.toString(dataPort[1]) + ")\r\n");    
+                    break;
+                default:
+                    break;
+            }
+            
+            
+            this.socketData = serverDataChannel.accept();
         } catch (Exception e) {
             controlChannel.controlResponse(new FTPCode().getMessage(425));
             System.out.println("Data channel died: " + e);
@@ -38,7 +53,6 @@ class DataChannel extends Thread {
 
                 //Starts listening
                 System.out.print("Before listening");
-                this.socketData = serverDataChannel.accept();
                 System.out.print("After listening");
 
                 // Setting a time limit
@@ -123,9 +137,9 @@ class DataChannel extends Thread {
                 try{
                 if(isBin){
                     byte[] finalContent = new byte[0];
-                    int count = 1;
+                    int count = 0;
                     do{
-                        count = 1;
+                        count = 0;
                             byte[] buffer = new byte[8192]; // or 4096, or more
                             count = inData.read(buffer);
 
@@ -133,18 +147,19 @@ class DataChannel extends Thread {
                             System.arraycopy(finalContent, 0, tmpContent, 0, finalContent.length);
                             System.arraycopy(buffer, 0, tmpContent, finalContent.length, buffer.length);
                             finalContent = tmpContent;
-                    }while( count > 1);
+                    }while( count > 0);
                     currentFolder.addFile(new File(words[1],finalContent));
                 }else{
                     String finalMsg = "";
                     String tmpMsg;
                     do{
                             tmpMsg = readerData.readLine();
+                            System.out.println(tmpMsg); 
                             if(tmpMsg != null)
-                                finalMsg += "\n";
+                                finalMsg += (tmpMsg + "\n");
                         
                     }while(tmpMsg != null);
-                    currentFolder.addFile(new File(words[1],finalMsg));
+                    controlChannel.currentFolder.addFile(new File(words[1],finalMsg));
                 }
                 }catch(IOException e){
                     System.out.println("Data Reader error: " + e); 
@@ -154,6 +169,8 @@ class DataChannel extends Thread {
                 }catch (Exception a){
                     System.out.println("Socket Data channel closed");
                 }
+                System.out.println("YOOOOOOO");
+                controlChannel.controlResponse(new FTPCode().getMessage(226));
                 break;
             case "LIST":
                 String list =  VirtualFileSystem.getInstance().getLIST(controlChannel.currentFolder,controlChannel.isLoggedIn);

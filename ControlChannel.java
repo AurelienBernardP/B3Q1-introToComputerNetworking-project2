@@ -125,9 +125,6 @@ class ControlChannel extends Thread {
             case "PORT":
                 requestPORT(words);
                 break;
-            case "EPRT":
-                requestEPRT(words);
-                break;
             case "CDUP"://go to parent directory, no arg
                 try{
                     currentFolder = VirtualFileSystem.getInstance().doCDUP(currentFolder);
@@ -173,8 +170,8 @@ class ControlChannel extends Thread {
                 break;
             case "LIST"://see current directory content, no arg( we dont have to handle the case where there is an arg)
                 if(dataChannel != null){
-                    // dataChannel.addRequestInQueue("TYPE A");
                     dataChannel.addRequestInQueue("LIST");
+                    dataChannel.start();
                     controlResponse(new FTPCode().getMessage(150));
                 }else{
                     controlResponse(new FTPCode().getMessage(426));
@@ -186,11 +183,13 @@ class ControlChannel extends Thread {
                     controlResponse(new FTPCode().getMessage(504));
                     return;
                 }
-                try {
-                    currentFolder.addFile(new File());
-                } catch (Exception e) {
-                    //TODO: handle exception
-                }
+                if(isBinary)
+                    dataChannel.addRequestInQueue("TYPE I");
+                else
+                    dataChannel.addRequestInQueue("TYPE A");
+                dataChannel.addRequestInQueue(request);
+                dataChannel.start();
+                controlResponse(new FTPCode().getMessage(150));
                 break;
 
             case "PWD"://gives path of current directory, no arg
@@ -223,27 +222,12 @@ class ControlChannel extends Thread {
                         dataChannel.addRequestInQueue("TYPE A");
                     }
                     dataChannel.addRequestInQueue(request);
+                    dataChannel.start();
                 }else{
                     controlResponse(new FTPCode().getMessage(426));
                 }
                 break;
 
-            case "STOR":// put a file on the server, 1 arg the file name 
-                if(words.length != 2){
-                    controlResponse(new FTPCode().getMessage(500));
-                    break;
-                }
-                if(dataChannel != null){
-                    if(isBinary){
-                        dataChannel.addRequestInQueue("TYPE I");
-                    }else{
-                        dataChannel.addRequestInQueue("TYPE A");
-                    }
-                    dataChannel.addRequestInQueue(request);
-                }else{
-                    controlResponse(new FTPCode().getMessage(426));
-                }
-                break;
             case"QUIT":// no arg, disconnect from server
             case"BYE":
             case"EXIT":
@@ -324,6 +308,7 @@ class ControlChannel extends Thread {
         extensionsSupported += " BYE\r\n";
         extensionsSupported += " EXIT\r\n";
         extensionsSupported += " CLOSE\r\n";
+        extensionsSupported += " STOR\r\n";
         extensionsSupported += " DISCONNECT\r\n";
         extensionsSupported += " USER\r\n";
         extensionsSupported += " PASS\r\n";
@@ -335,24 +320,16 @@ class ControlChannel extends Thread {
     }
 
     private void requestPASV(){
-        dataChannel = new DataChannel(this, 0);
-        int[] dataPort = getPassivePortAdrs(dataChannel.getPort());
-        controlResponse(new FTPCode().getMessage(227) +" (" + socketControl.getLocalAddress().toString().replace('.', ',').replace("/","") +"," + Integer.toString(dataPort[0]) + "," + Integer.toString(dataPort[1]) + ")\r\n");    
-        dataChannel.start();
-
+        dataChannel = new DataChannel(this, 0, "PASV");
         return;
     }
 
     private void requestEPSV(){
-        InetAddress ipClient = socketControl.getInetAddress();
-        int portClient = socketControl.getPort();
-        dataChannel = new DataChannel(this, 0);
-        controlResponse(new FTPCode().getMessage(229) +" (|||" + dataChannel.getPort() + "|)\r\n");
-        dataChannel.start();
+        dataChannel = new DataChannel(this, 0, "EPSV");
         return;
     }
 
-    private int[] getPassivePortAdrs(int portNb){
+    public int[] getPassivePortAdrs(int portNb){
         return new int[]{(portNb-(portNb%256))/256, portNb % 256};
     }
 
@@ -393,42 +370,7 @@ class ControlChannel extends Thread {
         int portClient = transitionClientPort(Integer.parseInt(interfaceClient[4]), Integer.parseInt(interfaceClient[5]));
         String ipClient = interfaceClient[0] +","+ interfaceClient[1] +","+ interfaceClient[2] +","+ interfaceClient[3];
 
-        this.dataChannel = new DataChannel(this, 20);
-        dataChannel.start();
-        return;
-    }
-
-
-    void requestEPRT(String[] request){
-
-        //Check length of request
-        if(request.length != 2){
-            controlResponse(new FTPCode().getMessage(502));
-            return;
-        }
-
-        String[] interfaceClient = request[1].split(",");
-
-        //Check if IP length is ok
-        if(interfaceClient.length != 6){
-            controlResponse(new FTPCode().getMessage(502));
-            return;
-        }
-
-        //Check if IP is all number
-        for (int i = 0; i < interfaceClient.length; i++) {
-            try {
-                Double.parseDouble(interfaceClient[i]);
-            } catch (NumberFormatException e) {
-                controlResponse(new FTPCode().getMessage(501));
-                return;
-            }
-        }
-
-        int portClient = transitionClientPort(Integer.parseInt(interfaceClient[4]), Integer.parseInt(interfaceClient[5]));
-        String ipClient = interfaceClient[0] +","+ interfaceClient[1] +","+ interfaceClient[2] +","+ interfaceClient[3];
-
-        this.dataChannel = new DataChannel(this, portClient);
+        this.dataChannel = new DataChannel(this, 20, "PORT");
         dataChannel.start();
         return;
     }
