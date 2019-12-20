@@ -176,8 +176,10 @@ class VirtualFileSystem{
 
     Folder doCWD(Folder currentFolder,String childFolder, Boolean isLoggedIn)throws VirtualFileException , NotAuthorizedException{
         System.out.println(childFolder);
+        if(childFolder.equals(this.getPWD(currentFolder)))
+            return currentFolder;
         int lastSlash = childFolder.lastIndexOf("/");
-        String folder = childFolder.substring(lastSlash,childFolder.length());
+        String folder = childFolder.substring(lastSlash +1,childFolder.length());
         Folder nextFolder = currentFolder.getChildFolder(folder);
 
         if(nextFolder == null){
