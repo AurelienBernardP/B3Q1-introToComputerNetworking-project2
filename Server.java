@@ -12,7 +12,7 @@ public class Server {
    private static int maxThreads;
    public static void main(String argv[]) throws Exception {
       ServerSocket server;
-      if(argv.length != 1){
+      if(argv.length != 2){
          maxThreads = Integer.parseInt(argv[0])/2;
       }else{
          System.err.println("Expected 1 arguments but given "+ argv.length);
