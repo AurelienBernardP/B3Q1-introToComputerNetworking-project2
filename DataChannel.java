@@ -109,12 +109,13 @@ class DataChannel extends Thread {
                 }
                 break;
 
-            case "STOR":
+            case "STOR":/*
                 byte[] finalContent = new byte[0];
                 String finalMsg = new String();
                 Folder currentFolder = controlChannel.currentFolder;
+                int count = 1;
                 do{
-                    int count = 1;
+                    count = 1;
                     if(isBin){
                         
                         byte[] buffer = new byte[8192]; // or 4096, or more
@@ -122,6 +123,7 @@ class DataChannel extends Thread {
 
                         byte[] tmpContent = new byte[finalContent.length + buffer.length];
                         System.arraycopy(finalContent, 0, tmpContent, 0, finalContent.length);
+
                         System.arraycopy(buffer, 0, tmpContent, finalContent.length, buffer.length);
                         finalContent = tmpContent;
                     }else{
@@ -139,7 +141,7 @@ class DataChannel extends Thread {
                     socketData.close();
                 } catch (Exception a){
                     System.out.println("Socket Data channel closed");
-                }
+                }*/
                 break;
             case "LIST":
                 String list =  VirtualFileSystem.getInstance().getLIST(controlChannel.currentFolder,controlChannel.isLoggedIn());

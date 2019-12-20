@@ -158,7 +158,6 @@ class VirtualFileSystem{
         root.addFile(new File("myimage.bmp",myImg));
         Folder privateFolder = root.getChildFolder("private");
         privateFolder.addFile(new File("secret.txt", "UPUPDOWNDOWNLEFTRIGHTLEFTRIGHTBASTART"));
-        isLoggedIn = false;
     }
 
     String getPWD(Folder currentFolder){
@@ -235,7 +234,7 @@ class File{
     private String name;
     private byte[] content;
     private long lastModified;
-    
+
     File(String name, byte[] content){
         this.name = name;
         this.content = content;
