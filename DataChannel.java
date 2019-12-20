@@ -29,7 +29,7 @@ class DataChannel extends Thread {
     }
 
 
-    public void startListening(String ipClient, int portClient, InetAddress local, int localPort){
+    public void startListening(InetAddress ipClient, int portClient, InetAddress local, int localPort){
         try {
             this.socketData = new Socket(ipClient, portClient, local, localPort);
         } catch (Exception e) {
@@ -40,10 +40,11 @@ class DataChannel extends Thread {
 
 
 
-    public DataChannel(ControlChannel controlChannel,int port){
+    public DataChannel(ControlChannel controlChannel,int port, boolean openServer){
         try {
             isBin = true;
-            serverDataChannel = new ServerSocket(port);
+            if(openServer)
+                serverDataChannel = new ServerSocket(port);
             requestInQueue = new LinkedList<String>();
             this.controlChannel = controlChannel;
         } catch (Exception e) {
