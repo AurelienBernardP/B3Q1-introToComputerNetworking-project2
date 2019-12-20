@@ -157,6 +157,7 @@ class ControlChannel extends Thread {
             case "LIST"://see current directory content, no arg( we dont have to handle the case where there is an arg)
                 controlResponse(new FTPCode().getMessage(150));
                 if(dataChannel != null){
+                    dataChannel.addRequestInQueue("TYPE A");
                     dataChannel.addRequestInQueue("LIST");
                 }else{
                     controlResponse(new FTPCode().getMessage(426));
@@ -170,10 +171,39 @@ class ControlChannel extends Thread {
             case "DELETE":// delete file in the current directory, 1 arg, the file name
                 break;
 
-            case "GET":// download a file from working directory, 1 arg, the file name
+            case "RETR":// download a file from working directory, 1 arg, the file name
+            
+                if(words.length != 2){
+                    controlResponse(new FTPCode().getMessage(500));
+                    break;
+                }
+                if(dataChannel != null){
+                    if(isBinary){
+                        dataChannel.addRequestInQueue("TYPE I");
+                    }else{
+                        dataChannel.addRequestInQueue("TYPE A");
+                    }
+                    dataChannel.addRequestInQueue(request);
+                }else{
+                    controlResponse(new FTPCode().getMessage(426));
+                }
                 break;
 
-            case "PUT":// put a file on the server, 1 arg the file name 
+            case "STOR":// put a file on the server, 1 arg the file name 
+                if(words.length != 2){
+                    controlResponse(new FTPCode().getMessage(500));
+                    break;
+                }
+                if(dataChannel != null){
+                    if(isBinary){
+                        dataChannel.addRequestInQueue("TYPE I");
+                    }else{
+                        dataChannel.addRequestInQueue("TYPE A");
+                    }
+                    dataChannel.addRequestInQueue(request);
+                }else{
+                    controlResponse(new FTPCode().getMessage(426));
+                }
                 break;
             case"QUIT":// no arg, disconnect from server
             case"BYE":
