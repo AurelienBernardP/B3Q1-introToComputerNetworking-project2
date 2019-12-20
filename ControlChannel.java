@@ -122,9 +122,11 @@ class ControlChannel extends Thread {
                 controlResponse(new FTPCode().getMessage(501));
                 break;
             case "PORT":
-                // requestPORT(words);
+                requestPORT(words);
                 break;
-            
+            case "EPRT":
+                requestEPRT(words);
+                break;
             case "CDUP"://go to parent directory, no arg
                 try{
                     currentFolder = VirtualFileSystem.getInstance().doCDUP(currentFolder);
@@ -188,7 +190,6 @@ class ControlChannel extends Thread {
                         dataChannel.addRequestInQueue("TYPE A");
                     }
                     dataChannel.addRequestInQueue(request);
-                    dataChannel.start();
                 }else{
                     controlResponse(new FTPCode().getMessage(426));
                 }
@@ -330,39 +331,74 @@ class ControlChannel extends Thread {
         }
     }
 
-    // void requestPORT(String[] request){
+    void requestPORT(String[] request){
 
-    //     //Check length of request
-    //     if(request.length != 2){
-    //         controlResponse(new FTPCode().getMessage(502));
-    //         return;
-    //     }
+        //Check length of request
+        if(request.length != 2){
+            controlResponse(new FTPCode().getMessage(502));
+            return;
+        }
 
-    //     String[] interfaceClient = request[1].split(",");
+        String[] interfaceClient = request[1].split(",");
 
-    //     //Check if IP length is ok
-    //     if(interfaceClient.length != 6){
-    //         controlResponse(new FTPCode().getMessage(502));
-    //         return;
-    //     }
+        //Check if IP length is ok
+        if(interfaceClient.length != 6){
+            controlResponse(new FTPCode().getMessage(502));
+            return;
+        }
 
-    //     //Check if IP is all number
-    //     for (int i = 0; i < interfaceClient.length; i++) {
-    //         try {
-    //             Double.parseDouble(interfaceClient[i]);
-    //         } catch (NumberFormatException e) {
-    //             controlResponse(new FTPCode().getMessage(501));
-    //             return;
-    //         }
-    //     }
+        //Check if IP is all number
+        for (int i = 0; i < interfaceClient.length; i++) {
+            try {
+                Double.parseDouble(interfaceClient[i]);
+            } catch (NumberFormatException e) {
+                controlResponse(new FTPCode().getMessage(501));
+                return;
+            }
+        }
 
-    //     int portClient = transitionClientPort(Integer.parseInt(interfaceClient[4]), Integer.parseInt(interfaceClient[5]));
-    //     String ipClient = interfaceClient[0] +","+ interfaceClient[1] +","+ interfaceClient[2] +","+ interfaceClient[3];
+        int portClient = transitionClientPort(Integer.parseInt(interfaceClient[4]), Integer.parseInt(interfaceClient[5]));
+        String ipClient = interfaceClient[0] +","+ interfaceClient[1] +","+ interfaceClient[2] +","+ interfaceClient[3];
 
-    //     this.dataChannel = new DataChannel(this, portClient);
-    //     dataChannel.startListening();
-    //     return;
-    // }
+        this.dataChannel = new DataChannel(this, 20);
+        dataChannel.start();
+        return;
+    }
+
+
+    void requestEPRT(String[] request){
+
+        //Check length of request
+        if(request.length != 2){
+            controlResponse(new FTPCode().getMessage(502));
+            return;
+        }
+
+        String[] interfaceClient = request[1].split(",");
+
+        //Check if IP length is ok
+        if(interfaceClient.length != 6){
+            controlResponse(new FTPCode().getMessage(502));
+            return;
+        }
+
+        //Check if IP is all number
+        for (int i = 0; i < interfaceClient.length; i++) {
+            try {
+                Double.parseDouble(interfaceClient[i]);
+            } catch (NumberFormatException e) {
+                controlResponse(new FTPCode().getMessage(501));
+                return;
+            }
+        }
+
+        int portClient = transitionClientPort(Integer.parseInt(interfaceClient[4]), Integer.parseInt(interfaceClient[5]));
+        String ipClient = interfaceClient[0] +","+ interfaceClient[1] +","+ interfaceClient[2] +","+ interfaceClient[3];
+
+        this.dataChannel = new DataChannel(this, portClient);
+        dataChannel.start();
+        return;
+    }
 
     int transitionClientPort(int x, int y){
         return x*256+y;

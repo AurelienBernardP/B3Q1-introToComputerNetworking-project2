@@ -51,6 +51,9 @@ class DataChannel extends Thread {
                 while (requestInQueue.peek() != null)
                     processRequest(requestInQueue.removeFirst());
                 socketData.close();
+                serverDataChannel.close();
+                System.out.print("Closed everything and out");
+                return;
         } catch (Exception e) {
             try {
                 socketData.close();
@@ -59,6 +62,7 @@ class DataChannel extends Thread {
             }
             controlChannel.controlResponse(new FTPCode().getMessage(425));
             System.out.println("Socket Data channel died: " + e);
+            return;
         }
     }
 
