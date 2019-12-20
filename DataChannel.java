@@ -7,7 +7,7 @@ import java.util.*;
 
 
 class DataChannel extends Thread {
-    private static final int TIMEOUT = 1000 * 20;
+    private static final int TIMEOUT = 1000 * 60;
 
     private ServerSocket serverDataChannel;
     private Socket socketData;
@@ -20,28 +20,33 @@ class DataChannel extends Thread {
 
     private ControlChannel controlChannel;
 
-    public DataChannel(ControlChannel controlChannel, int port){
+    public DataChannel(ControlChannel controlChannel,int port){
         try {
             serverDataChannel = new ServerSocket(port);
             requestInQueue = new LinkedList<String>();
             this.controlChannel = controlChannel;
-
         } catch (Exception e) {
             controlChannel.controlResponse(new FTPCode().getMessage(425));
             System.out.println("Data channel died: " + e);
         }
     }
 
-    public void startListening(){
+    @Override
+    public void run(){
         try {
-            this.socketData = serverDataChannel.accept();
-            // Setting a time limit
-            this.socketData.setSoTimeout(TIMEOUT);
-            this.socketData.setTcpNoDelay(true);
-            // Input and output stream of the control socket
-            outData = socketData.getOutputStream();
-            inData = socketData.getInputStream();
-            readerData = new BufferedReader(new InputStreamReader(inData));
+
+                //Starts listening
+                this.socketData = serverDataChannel.accept();
+                // Setting a time limit
+                this.socketData.setSoTimeout(TIMEOUT);
+                this.socketData.setTcpNoDelay(true);
+                // Input and output stream of the control socket
+                outData = socketData.getOutputStream();
+                inData = socketData.getInputStream();
+                readerData = new BufferedReader(new InputStreamReader(inData));
+                while (requestInQueue.peek() != null)
+                    processRequest(requestInQueue.removeFirst());
+                socketData.close();
         } catch (Exception e) {
             try {
                 socketData.close();
@@ -51,13 +56,6 @@ class DataChannel extends Thread {
             controlChannel.controlResponse(new FTPCode().getMessage(425));
             System.out.println("Socket Data channel died: " + e);
         }
-    }
-
-    @Override
-    public void run(){
-        startListening();
-        while (requestInQueue.peek() != null)
-            processRequest(requestInQueue.removeFirst());
     }
 
     public void addRequestInQueue(String request){
@@ -86,7 +84,7 @@ class DataChannel extends Thread {
                 String list =  VirtualFileSystem.getInstance().getLIST(controlChannel.currentFolder);
                 dataResponse(list);
                 controlChannel.controlResponse(new FTPCode().getMessage(226));
-                break;
+                return;
             case"SYN":
                 requestSyn(words);
                 break;
@@ -101,19 +99,7 @@ class DataChannel extends Thread {
                 return;
             }
 
-        controlChannel.controlResponse(new FTPCode().getMessage(502));
         return;
-    }
-
-    void closeDataChannel(){
-        try {
-            socketData.close();
-            outData = null;
-            inData = null;
-            readerData = null;
-        } catch (Exception e) {
-            System.out.println("Closes data connection: "+ e);
-        }
     }
 
     void dataResponse(String response){
@@ -161,7 +147,6 @@ class DataChannel extends Thread {
         }*/
 
         dataResponse("ACK");
-        closeDataChannel();
         controlChannel.controlResponse(new FTPCode().getMessage(200));
         return;
     }

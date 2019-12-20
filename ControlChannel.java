@@ -7,7 +7,7 @@ import java.util.*;
 
 class ControlChannel extends Thread {
 
-    private static final int TIMEOUT = 1000 * 20;
+    private static final int TIMEOUT = 1000 * 60;
     private boolean isActive;
     private boolean isBinary;//TYPE I or TYPE A
     private String user;
@@ -73,7 +73,7 @@ class ControlChannel extends Thread {
     
         switch (words[0]) {
             case "SYST":
-                controlResponse("215 " + System.getProperty("os.name").toString() +"\n\r");
+                controlResponse("215 " + System.getProperty("os.name").toString() +"\r\n");
                 break;
 
             case "FEAT":
@@ -100,7 +100,7 @@ class ControlChannel extends Thread {
                 }
                 try{
                     String lastModified = VirtualFileSystem.getInstance().getFile(currentFolder, words[1]).getLastModified();
-                    controlResponse(new FTPCode().getMessage(253) +" " +lastModified +"\n\r"); 
+                    controlResponse(new FTPCode().getMessage(253) +" " +lastModified +"\r\n"); 
                 }catch(VirtualFileException e){
                     controlResponse(new FTPCode().getMessage(550));
                 }
@@ -128,7 +128,7 @@ class ControlChannel extends Thread {
                 controlResponse(new FTPCode().getMessage(501));
                 break;
             case "PORT":
-                requestPORT(words);
+                // requestPORT(words);
                 break;
             
             case "CDUP"://go to parent directory, no arg
@@ -155,14 +155,12 @@ class ControlChannel extends Thread {
                 break;
 
             case "LIST"://see current directory content, no arg( we dont have to handle the case where there is an arg)
-                controlResponse(new FTPCode().getMessage(200));
+                controlResponse(new FTPCode().getMessage(150));
                 if(dataChannel != null){
                     dataChannel.addRequestInQueue("LIST");
-                    dataChannel.start();
                 }else{
                     controlResponse(new FTPCode().getMessage(426));
                 }
-                
                 break;
 
             case "PWD"://gives path of current directory, no arg
@@ -260,14 +258,17 @@ class ControlChannel extends Thread {
         dataChannel = new DataChannel(this, 0);
         int[] dataPort = getPassivePortAdrs(dataChannel.getPort());
         controlResponse(new FTPCode().getMessage(227) +" (" + socketControl.getLocalAddress().toString().replace('.', ',').replace("/","") +"," + Integer.toString(dataPort[0]) + "," + Integer.toString(dataPort[1]) + ")\r\n");    
-        dataChannel.startListening();
+        dataChannel.start();
+
         return;
     }
 
     private void requestEPSV(){
+        InetAddress ipClient = socketControl.getInetAddress();
+        int portClient = socketControl.getPort();
         dataChannel = new DataChannel(this, 0);
-        int[] dataPort = getPassivePortAdrs(dataChannel.getPort());
-        controlResponse(new FTPCode().getMessage(229) +" (" + socketControl.getLocalAddress().toString().replace('.', ',').replace("/","") +"," + Integer.toString(dataPort[0]) + "," + Integer.toString(dataPort[1]) + ")\r\n");    
+        controlResponse(new FTPCode().getMessage(229) +" (|||" + dataChannel.getPort() + "|)\r\n");
+        dataChannel.start();
         return;
     }
 
@@ -278,6 +279,7 @@ class ControlChannel extends Thread {
     private void requestEPRT(){
         dataChannel.start();
         controlResponse(new FTPCode().getMessage(200));
+
     }
 
 
@@ -293,39 +295,39 @@ class ControlChannel extends Thread {
         }
     }
 
-    void requestPORT(String[] request){
+    // void requestPORT(String[] request){
 
-        //Check length of request
-        if(request.length != 2){
-            controlResponse(new FTPCode().getMessage(502));
-            return;
-        }
+    //     //Check length of request
+    //     if(request.length != 2){
+    //         controlResponse(new FTPCode().getMessage(502));
+    //         return;
+    //     }
 
-        String[] interfaceClient = request[1].split(",");
+    //     String[] interfaceClient = request[1].split(",");
 
-        //Check if IP length is ok
-        if(interfaceClient.length != 6){
-            controlResponse(new FTPCode().getMessage(502));
-            return;
-        }
+    //     //Check if IP length is ok
+    //     if(interfaceClient.length != 6){
+    //         controlResponse(new FTPCode().getMessage(502));
+    //         return;
+    //     }
 
-        //Check if IP is all number
-        for (int i = 0; i < interfaceClient.length; i++) {
-            try {
-                Double.parseDouble(interfaceClient[i]);
-            } catch (NumberFormatException e) {
-                controlResponse(new FTPCode().getMessage(501));
-                return;
-            }
-        }
+    //     //Check if IP is all number
+    //     for (int i = 0; i < interfaceClient.length; i++) {
+    //         try {
+    //             Double.parseDouble(interfaceClient[i]);
+    //         } catch (NumberFormatException e) {
+    //             controlResponse(new FTPCode().getMessage(501));
+    //             return;
+    //         }
+    //     }
 
-        int portClient = transitionClientPort(Integer.parseInt(interfaceClient[4]), Integer.parseInt(interfaceClient[5]));
-        String ipClient = interfaceClient[0] +","+ interfaceClient[1] +","+ interfaceClient[2] +","+ interfaceClient[3];
+    //     int portClient = transitionClientPort(Integer.parseInt(interfaceClient[4]), Integer.parseInt(interfaceClient[5]));
+    //     String ipClient = interfaceClient[0] +","+ interfaceClient[1] +","+ interfaceClient[2] +","+ interfaceClient[3];
 
-        this.dataChannel = new DataChannel(this, portClient);
-        dataChannel.startListening();
-        return;
-    }
+    //     this.dataChannel = new DataChannel(this, portClient);
+    //     dataChannel.startListening();
+    //     return;
+    // }
 
     int transitionClientPort(int x, int y){
         return x*256+y;

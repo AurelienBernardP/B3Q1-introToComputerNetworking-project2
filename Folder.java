@@ -9,6 +9,7 @@ class Folder{
     private ArrayList<File> files;
     private String name;
     private Folder parent;
+    private long lastModified;
 
     Folder(String name, Boolean isPrivate,Folder parent){
 
@@ -17,6 +18,7 @@ class Folder{
         this.name = name;
         this.isPrivate = isPrivate;
         this.parent = parent;
+        this.lastModified = System.currentTimeMillis();
     }
 
     void addFile(File newFile){
@@ -62,15 +64,29 @@ class Folder{
         return null;
     }
 
+    int getSize(){
+        return subFolders.size();
+    }
+
+    String getLastModified(){
+        DateFormat simple = new SimpleDateFormat("MMM DD hh:mm");
+        Date date = new Date(this.lastModified);
+        return simple.format(date).toString();
+    }
+
     String getList(){
         String list = "";
 
         for (int i = 0; i < subFolders.size(); i++){
-            list += "+" + "\t" +(subFolders.get(i).getName() + "\r\n");
+            Folder s = subFolders.get(i);
+            list += "d      " + s.getSize() + " " + s.getLastModified() + " " +(s.getName() + "\r\n");
         }
+
         for (int i = 0; i < files.size(); i++){
-            list += "+" +files.get(i).getLastModified()+"\t" +(files.get(i).getName() + "\r\n");
+            File f = files.get(i);
+            list += "-      " + f.getSize() +  " " + f.getLastModified()+" " +(f.getName() + "\r\n");
         }
+
         return list;
     }
 
@@ -159,14 +175,11 @@ class VirtualFileSystem{
     }
 
     Folder doCWD(Folder currentFolder,String childFolder, Boolean isLoggedIn)throws VirtualFileException , NotAuthorizedException{
-        System.out.println("In docwd");
         System.out.println(childFolder);
 
         Folder nextFolder = currentFolder.getChildFolder(childFolder);
-        System.out.println("after getchilkdfolder");
 
         if(nextFolder == null){
-            System.out.println("Exception");
             throw new VirtualFileException();
         }
 
@@ -195,8 +208,6 @@ class VirtualFileSystem{
     }
 
     void addFile(Folder currentFolder, File newFile){
-        System.out.println("Dans virtual addFile");
-
         currentFolder.addFile(newFile);
     }
 
@@ -248,11 +259,13 @@ class File{
     }
     //FORMAT YYYYMMDDhhmmss
     String getLastModified(){
-        DateFormat simple = new SimpleDateFormat("yyyyMMddHHmmss");
+        DateFormat simple = new SimpleDateFormat("MMM DD hh:mm");
         Date date = new Date(this.lastModified);
-        System.out.println(date.toString());
-        System.out.println(simple.format(date).toString());
         return simple.format(date).toString();
+    }
+
+    int getSize(){
+        return content.length * 8;
     }
 
 
