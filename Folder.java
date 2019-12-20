@@ -183,7 +183,7 @@ class VirtualFileSystem{
         if(childFolder.equals(this.getPWD(currentFolder)))
             return currentFolder;
 
-        System.out.println(childFolder);
+        
         if(childFolder.equals(this.getPWD(currentFolder)))
             return currentFolder;
         int lastSlash = childFolder.lastIndexOf("/");

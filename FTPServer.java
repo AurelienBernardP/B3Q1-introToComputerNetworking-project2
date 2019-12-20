@@ -5,9 +5,9 @@ import java.net.Socket;
 /**
  * Server
  */
-public class Server {
+public class FTPServer {
 
-   private static final int port = 21;
+   private static final int port = 2146;
    private static int nbThreads = 0;
    private static int maxThreads;
    public static void main(String argv[]) throws Exception {

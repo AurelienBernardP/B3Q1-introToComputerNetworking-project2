@@ -50,7 +50,6 @@ class ControlChannel extends Thread {
                     processRequest(request);
 
                 if(inControl == null){
-                    System.out.println("Server is dead");
                     Server.threadKilled();
                     return;
                 }
@@ -299,9 +298,9 @@ class ControlChannel extends Thread {
         extensionsSupported += " PORT\r\n";
         extensionsSupported += " CDUP\r\n";
         extensionsSupported += " LIST\r\n";
-        extensionsSupported += " DELETE\r\n";
-        extensionsSupported += " GET\r\n";
-        extensionsSupported += " PUT\r\n";
+        extensionsSupported += " DELE\r\n";
+        extensionsSupported += " RETR\r\n";
+        extensionsSupported += " STOR\r\n";
         extensionsSupported += " QUIT\r\n";
         extensionsSupported += " BYE\r\n";
         extensionsSupported += " EXIT\r\n";
@@ -311,6 +310,9 @@ class ControlChannel extends Thread {
         extensionsSupported += " USER\r\n";
         extensionsSupported += " PASS\r\n";
         extensionsSupported += " RENAME\r\n";
+        extensionsSupported += " RNTO\r\n";
+        extensionsSupported += " RNFR\r\n";
+        extensionsSupported += " TYPE\r\n";
         extensionsSupported += "211 END\r\n";
 
         controlResponse(extensionsSupported);

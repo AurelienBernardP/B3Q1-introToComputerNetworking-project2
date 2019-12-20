@@ -55,7 +55,7 @@ class DataChannel extends Thread {
     @Override
     public void run(){
         try {
-                System.out.println("Thread is runnong");
+                
                 // Setting a time limit
                 this.socketData.setSoTimeout(TIMEOUT);
                 socketData.setReuseAddress(true);
@@ -68,7 +68,7 @@ class DataChannel extends Thread {
                     processRequest(requestInQueue.removeFirst());
                 socketData.close();
                 serverDataChannel.close();
-                System.out.println("Closed everything and out");
+                
                 return;
         } catch (Exception e) {
             try {
@@ -156,7 +156,7 @@ class DataChannel extends Thread {
                     String tmpMsg;
                     do{
                             tmpMsg = readerData.readLine();
-                            System.out.println(tmpMsg); 
+        
                             if(tmpMsg != null)
                                 finalMsg += (tmpMsg + "\n");
                         
@@ -171,7 +171,7 @@ class DataChannel extends Thread {
                 }catch (Exception a){
                     System.out.println("Socket Data channel closed");
                 }
-                System.out.println("YOOOOOOO");
+                
                 controlChannel.controlResponse(new FTPCode().getMessage(226));
                 break;
             case "LIST":
