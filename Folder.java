@@ -170,11 +170,19 @@ class VirtualFileSystem{
         return "/" + path;
     }
 
+    void doRename(Folder currentFolder, String currentName, String newName)throws VirtualFileException{
+            File toChange = currentFolder.getFile(currentName);
+            toChange.setName(newName);
+    }
+
     String getLIST(Folder currentFolder,Boolean isLogged){
         return currentFolder.getList(isLogged);
     }
 
     Folder doCWD(Folder currentFolder,String childFolder, Boolean isLoggedIn)throws VirtualFileException , NotAuthorizedException{
+        if(childFolder.equals(this.getPWD(currentFolder)))
+            return currentFolder;
+
         System.out.println(childFolder);
         int lastSlash = childFolder.lastIndexOf("/");
         String folder = childFolder.substring(lastSlash,childFolder.length());
@@ -198,6 +206,9 @@ class VirtualFileSystem{
             throw new VirtualFileException();
         }
 
+    }
+    synchronized void doDelete(Folder currentFolder, String toDelete)throws VirtualFileException{
+        currentFolder.deleteFile(toDelete);
     }
 
     File getFile(Folder currentFolder,String name)throws VirtualFileException{

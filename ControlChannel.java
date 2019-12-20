@@ -139,7 +139,7 @@ class ControlChannel extends Thread {
                     return;
                 }
                 try{
-                    VirtualFileSystem.getInstance().doCWD(currentFolder,words[1],isLoggedIn);
+                    currentFolder = VirtualFileSystem.getInstance().doCWD(currentFolder,words[1],isLoggedIn);
                     controlResponse(new FTPCode().getMessage(250));
                 }catch(VirtualFileException e){
                     controlResponse(new FTPCode().getMessage(450));
@@ -163,6 +163,16 @@ class ControlChannel extends Thread {
                 break;
 
             case "DELETE":// delete file in the current directory, 1 arg, the file name
+                if(words.length != 2){
+                    controlResponse(new FTPCode().getMessage(504));
+                    return;
+                }
+                try{
+                    VirtualFileSystem.getInstance().doDelete(currentFolder, words[1]);
+                    controlResponse(new FTPCode().getMessage(250));
+                }catch(VirtualFileException e){
+                    controlResponse(new FTPCode().getMessage(450));
+                }
                 break;
 
             case "RETR":// download a file from working directory, 1 arg, the file name
@@ -214,6 +224,17 @@ class ControlChannel extends Thread {
                 requestPASS(words);
                 break;
             case"RENAME":
+                if(words.length != 3){
+                    controlResponse(new FTPCode().getMessage(504));
+                    return;
+                }
+                try{
+                    VirtualFileSystem.getInstance().doRename(currentFolder, words[1], words[2]);
+                    controlResponse(new FTPCode().getMessage(250));
+                }catch(VirtualFileException e){
+                    controlResponse(new FTPCode().getMessage(450));
+                }
+            
                 break; //rename a file in current directory , 2 args , current name of file, new filename.
                 
             default: // error case
