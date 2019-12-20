@@ -74,11 +74,13 @@ class Folder{
         return simple.format(date).toString();
     }
 
-    String getList(){
+    String getList(Boolean isLogged){
         String list = "";
 
         for (int i = 0; i < subFolders.size(); i++){
             Folder s = subFolders.get(i);
+            if(s.isPrivate() && !isLogged)
+                continue;
             list += "d      " + s.getSize() + " " + s.getLastModified() + " " +(s.getName() + "\r\n");
         }
 
@@ -113,7 +115,6 @@ class Folder{
 
 class VirtualFileSystem{
     private Folder root;
-    private Boolean isLoggedIn;
     private byte[] myImg = {66,  77,  70,  1,  0,  0,    0,   0,   0,   0,  62,   0,   0,  0,   40,   0,
             0,   0,  34,  0,  0,  0,   33,   0,   0,   0,   1,   0,   1,  0,    0,   0,
             0,   0,   8,  1,  0,  0,    0,   0,   0,   0,   0,   0,   0,  0,    0,   0,
@@ -153,7 +154,7 @@ class VirtualFileSystem{
     private VirtualFileSystem(){
         root = new Folder("/", false, null);
         root.addFolder("private",true);
-        root.addFile(new File("myText.txt","Irasshaimase"));
+        root.addFile(new File("mytext.txt","Irasshaimase"));
         root.addFile(new File("myimage.bmp",myImg));
         Folder privateFolder = root.getChildFolder("private");
         privateFolder.addFile(new File("secret.txt", "UPUPDOWNDOWNLEFTRIGHTLEFTRIGHTBASTART"));
@@ -170,8 +171,8 @@ class VirtualFileSystem{
         return "/" + path;
     }
 
-    String getLIST(Folder currentFolder){
-        return currentFolder.getList();
+    String getLIST(Folder currentFolder,Boolean isLogged){
+        return currentFolder.getList(isLogged);
     }
 
     Folder doCWD(Folder currentFolder,String childFolder, Boolean isLoggedIn)throws VirtualFileException , NotAuthorizedException{
@@ -211,7 +212,7 @@ class VirtualFileSystem{
         currentFolder.addFile(newFile);
     }
 
-    void renameFile(Folder currentFolder, String oldName, String newName)throws VirtualFileException{
+    synchronized void renameFile(Folder currentFolder, String oldName, String newName)throws VirtualFileException{
         File toChange = currentFolder.getFile(oldName);
         if(toChange != null){
             toChange.setName(newName);
@@ -219,7 +220,7 @@ class VirtualFileSystem{
             throw new VirtualFileException();
         }
     }
-    void deleteFile(Folder currentFolder,String name)throws VirtualFileException{
+    synchronized void deleteFile(Folder currentFolder,String name)throws VirtualFileException{
         currentFolder.deleteFile(name);
     }
 
@@ -234,6 +235,7 @@ class File{
     private String name;
     private byte[] content;
     private long lastModified;
+    
     File(String name, byte[] content){
         this.name = name;
         this.content = content;
