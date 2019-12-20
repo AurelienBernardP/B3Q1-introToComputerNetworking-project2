@@ -20,32 +20,32 @@ class DataChannel extends Thread {
 
     private ControlChannel controlChannel;
 
-    public DataChannel(ControlChannel controlChannel,int port, String typeConnection, String ipClient, int portClient){
+    public void startListening(){
+        try {
+            this.socketData = this.serverDataChannel.accept();
+        } catch (Exception e) {
+            System.out.println("Cannot listen on data channel: "+ e);
+        }
+    }
+
+
+    public void startListening(String ipClient, int portClient, InetAddress local, int localPort){
+        try {
+            this.socketData = new Socket(ipClient, portClient, local, localPort);
+        } catch (Exception e) {
+            System.out.println("Cannot listen on data channel: "+ e);
+        }
+    }
+
+
+
+
+    public DataChannel(ControlChannel controlChannel,int port){
         try {
             isBin = true;
             serverDataChannel = new ServerSocket(port);
             requestInQueue = new LinkedList<String>();
             this.controlChannel = controlChannel;
-
-            switch (typeConnection) {
-                case "EPSV":
-                    controlChannel.controlResponse(new FTPCode().getMessage(229) +" (|||" + getPort() + "|)\r\n");
-                    this.socketData = serverDataChannel.accept();
-                    break;
-                case "PASV":
-                    int[] dataPort = controlChannel.getPassivePortAdrs(getPort());
-                    controlChannel.controlResponse(new FTPCode().getMessage(227) +" (" + serverDataChannel.getInetAddress().toString().replace('.', ',').replace("/","") +"," + Integer.toString(dataPort[0]) + "," + Integer.toString(dataPort[1]) + ")\r\n");    
-                    this.socketData = serverDataChannel.accept();
-                    break;
-                case "PORT":
-                    this.socketData = new Socket(ipClient, portClient, serverDataChannel.getInetAddress(), port);
-                    controlChannel.controlResponse(new FTPCode().getMessage(200));
-                    break;
-                default:
-                    break;
-            }
-            
-            
         } catch (Exception e) {
             controlChannel.controlResponse(new FTPCode().getMessage(425));
             System.out.println("Data channel died: " + e);
