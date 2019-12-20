@@ -122,10 +122,10 @@ class DataChannel extends Thread {
 
                         byte[] tmpContent = new byte[finalContent.length + buffer.length];
                         System.arraycopy(finalContent, 0, tmpContent, 0, finalContent.length);
-                        System.arraycopy(buffer, 0, c, finalContent.length, buffer.length);
+                        System.arraycopy(buffer, 0, tmpContent, finalContent.length, buffer.length);
                         finalContent = tmpContent;
                     }else{
-                        String tmpMsg = readerData().readLine();
+                        String tmpMsg = readerData.readLine();
                         if(tmpMsg != null)
                             tmpMsg += "\n";
                     }
