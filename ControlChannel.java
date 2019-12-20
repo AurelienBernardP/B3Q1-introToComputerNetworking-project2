@@ -320,7 +320,7 @@ class ControlChannel extends Thread {
     }
 
     private void requestPASV(){
-        dataChannel = new DataChannel(this, 0, true);
+        dataChannel = new DataChannel(this, 0);
         int[] dataPort = getPassivePortAdrs(dataChannel.getPort());
         controlResponse(new FTPCode().getMessage(227) +" (" +socketControl.getLocalAddress().toString().replace('.', ',').replace("/","") +"," + Integer.toString(dataPort[0]) + "," + Integer.toString(dataPort[1]) + ")\r\n");    
         dataChannel.startListening();
@@ -328,7 +328,7 @@ class ControlChannel extends Thread {
     }
 
     private void requestEPSV(){
-        dataChannel = new DataChannel(this, 0, true);
+        dataChannel = new DataChannel(this, 0);
         controlResponse(new FTPCode().getMessage(229) +" (|||" + dataChannel.getPort() + "|)\r\n");
         dataChannel.startListening();
         return;
@@ -374,7 +374,7 @@ class ControlChannel extends Thread {
 
         int portClient = transitionClientPort(Integer.parseInt(interfaceClient[4]), Integer.parseInt(interfaceClient[5]));
 
-        this.dataChannel = new DataChannel(this, 2046, false);
+        this.dataChannel = new DataChannel(this, 2046);
         dataChannel.startListening(socketControl.getInetAddress(), portClient, socketControl.getLocalAddress(), 2046);
         controlResponse(new FTPCode().getMessage(200));
 
