@@ -15,7 +15,6 @@ class DataChannel extends Thread {
     private InputStream inData;
     private BufferedReader readerData;
     private Boolean isBin;
-    private Boolean isPassive;
     private Deque<String> requestInQueue;
 
 
@@ -32,8 +31,7 @@ class DataChannel extends Thread {
 
     public void startListening(InetAddress ipClient, int portClient, InetAddress local, int localPort){
         try {
-            this.socketData = new Socket(ipClient, portClient, local, localPort);
-            socketData.setReuseAddress(true);
+            this.socketData = new Socket(ipClient, portClient);
         } catch (Exception e) {
             System.out.println("Cannot listen on data channel: "+ e);
         }
@@ -42,12 +40,10 @@ class DataChannel extends Thread {
 
 
 
-    public DataChannel(ControlChannel controlChannel,int port, boolean isPassive){
+    public DataChannel(ControlChannel controlChannel,int port){
         try {
             isBin = true;
-            this.isPassive = isPassive;
-            if(isPassive)
-                serverDataChannel = new ServerSocket(port);
+            serverDataChannel = new ServerSocket(port);
             requestInQueue = new LinkedList<String>();
             this.controlChannel = controlChannel;
         } catch (Exception e) {
@@ -62,6 +58,7 @@ class DataChannel extends Thread {
                 System.out.println("Thread is runnong");
                 // Setting a time limit
                 this.socketData.setSoTimeout(TIMEOUT);
+                socketData.setReuseAddress(true);
                 this.socketData.setTcpNoDelay(true);
                 // Input and output stream of the control socket
                 outData = socketData.getOutputStream();
@@ -70,8 +67,7 @@ class DataChannel extends Thread {
                 while (requestInQueue.peek() != null)
                     processRequest(requestInQueue.removeFirst());
                 socketData.close();
-                if(isPassive)
-                    serverDataChannel.close();
+                serverDataChannel.close();
                 System.out.println("Closed everything and out");
                 return;
         } catch (Exception e) {
@@ -126,8 +122,7 @@ class DataChannel extends Thread {
                     controlChannel.controlResponse(new FTPCode().getMessage(226));
                     try {
                         socketData.close();
-                        if(isPassive)
-                            serverDataChannel.close();
+                        serverDataChannel.close();
                     } catch (Exception a){
                         System.out.println("Socket Data channel closed");
                         return;
