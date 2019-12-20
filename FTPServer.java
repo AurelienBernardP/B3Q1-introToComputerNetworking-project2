@@ -6,7 +6,6 @@ import java.net.Socket;
  * Server
  */
 public class FTPServer {
-
    private static final int port = 2146;
    private static int nbThreads = 0;
    private static int maxThreads;
