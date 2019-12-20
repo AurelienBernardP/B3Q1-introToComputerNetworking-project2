@@ -20,7 +20,7 @@ class DataChannel extends Thread {
 
     private ControlChannel controlChannel;
 
-    public DataChannel(ControlChannel controlChannel,int port, String typeConnection){
+    public DataChannel(ControlChannel controlChannel,int port, String typeConnection, String ipClient, int portClient){
         try {
             isBin = true;
             serverDataChannel = new ServerSocket(port);
@@ -30,17 +30,22 @@ class DataChannel extends Thread {
             switch (typeConnection) {
                 case "EPSV":
                     controlChannel.controlResponse(new FTPCode().getMessage(229) +" (|||" + getPort() + "|)\r\n");
+                    this.socketData = serverDataChannel.accept();
                     break;
                 case "PASV":
                     int[] dataPort = controlChannel.getPassivePortAdrs(getPort());
                     controlChannel.controlResponse(new FTPCode().getMessage(227) +" (" + serverDataChannel.getInetAddress().toString().replace('.', ',').replace("/","") +"," + Integer.toString(dataPort[0]) + "," + Integer.toString(dataPort[1]) + ")\r\n");    
+                    this.socketData = serverDataChannel.accept();
+                    break;
+                case "PORT":
+                    this.socketData = new Socket(ipClient, portClient, serverDataChannel.getInetAddress(), port);
+                    controlChannel.controlResponse(new FTPCode().getMessage(200));
                     break;
                 default:
                     break;
             }
             
             
-            this.socketData = serverDataChannel.accept();
         } catch (Exception e) {
             controlChannel.controlResponse(new FTPCode().getMessage(425));
             System.out.println("Data channel died: " + e);

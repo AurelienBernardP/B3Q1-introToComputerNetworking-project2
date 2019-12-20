@@ -320,12 +320,12 @@ class ControlChannel extends Thread {
     }
 
     private void requestPASV(){
-        dataChannel = new DataChannel(this, 0, "PASV");
+        dataChannel = new DataChannel(this, 0, "PASV", "", 0);
         return;
     }
 
     private void requestEPSV(){
-        dataChannel = new DataChannel(this, 0, "EPSV");
+        dataChannel = new DataChannel(this, 0, "EPSV", "", 0);
         return;
     }
 
@@ -370,8 +370,7 @@ class ControlChannel extends Thread {
         int portClient = transitionClientPort(Integer.parseInt(interfaceClient[4]), Integer.parseInt(interfaceClient[5]));
         String ipClient = interfaceClient[0] +","+ interfaceClient[1] +","+ interfaceClient[2] +","+ interfaceClient[3];
 
-        this.dataChannel = new DataChannel(this, 20, "PORT");
-        dataChannel.start();
+        this.dataChannel = new DataChannel(this, 2046, "PORT", ipClient);
         return;
     }
 
