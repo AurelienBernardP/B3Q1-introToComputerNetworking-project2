@@ -34,6 +34,9 @@ class DataChannel extends Thread {
         try {
             this.socketData = new Socket(ipClient, portClient, local, localPort);
             socketData.setReuseAddress(true);
+            socketData.close();
+            this.socketData = new Socket(ipClient, portClient, local, localPort);
+            socketData.setReuseAddress(true);
         } catch (Exception e) {
             System.out.println("Cannot listen on data channel: "+ e);
         }
