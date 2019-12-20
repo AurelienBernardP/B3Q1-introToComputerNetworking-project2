@@ -102,8 +102,10 @@ class DataChannel extends Thread {
                     controlChannel.controlResponse(new FTPCode().getMessage(226));
                     try {
                         socketData.close();
+                        serverDataChannel.close();
                     } catch (Exception a){
                         System.out.println("Socket Data channel closed");
+                        return;
                     }//TO HANDLE EXEPCEPTION
 
                 } catch (Exception e) {
@@ -112,39 +114,42 @@ class DataChannel extends Thread {
                 }
                 break;
 
-            case "STOR":/*
-                byte[] finalContent = new byte[0];
-                String finalMsg = new String();
+            case "STOR":
                 Folder currentFolder = controlChannel.currentFolder;
-                int count = 1;
-                do{
-                    count = 1;
-                    if(isBin){
-                        
-                        byte[] buffer = new byte[8192]; // or 4096, or more
-                        count = inData.read(buffer);
-
-                        byte[] tmpContent = new byte[finalContent.length + buffer.length];
-                        System.arraycopy(finalContent, 0, tmpContent, 0, finalContent.length);
-
-                        System.arraycopy(buffer, 0, tmpContent, finalContent.length, buffer.length);
-                        finalContent = tmpContent;
-                    }else{
-                        String tmpMsg = readerData.readLine();
-                        if(tmpMsg != null)
-                            tmpMsg += "\n";
-                    }
-                }while(tmpMsg != null && count > 1);
+                try{
                 if(isBin){
+                    byte[] finalContent = new byte[0];
+                    int count = 1;
+                    do{
+                        count = 1;
+                            byte[] buffer = new byte[8192]; // or 4096, or more
+                            count = inData.read(buffer);
+
+                            byte[] tmpContent = new byte[finalContent.length + buffer.length];
+                            System.arraycopy(finalContent, 0, tmpContent, 0, finalContent.length);
+                            System.arraycopy(buffer, 0, tmpContent, finalContent.length, buffer.length);
+                            finalContent = tmpContent;
+                    }while( count > 1);
                     currentFolder.addFile(new File(words[1],finalContent));
                 }else{
+                    String finalMsg = "";
+                    String tmpMsg;
+                    do{
+                            tmpMsg = readerData.readLine();
+                            if(tmpMsg != null)
+                                finalMsg += "\n";
+                        
+                    }while(tmpMsg != null);
                     currentFolder.addFile(new File(words[1],finalMsg));
+                }
+                }catch(IOException e){
+                    System.out.println("Data Reader error: " + e); 
                 }
                 try {
                     socketData.close();
-                } catch (Exception a){
+                }catch (Exception a){
                     System.out.println("Socket Data channel closed");
-                }*/
+                }
                 break;
             case "LIST":
                 String list =  VirtualFileSystem.getInstance().getLIST(controlChannel.currentFolder,controlChannel.isLoggedIn);
